@@ -1,6 +1,6 @@
 === Frontend Uploader ===
 Contributors: rinatkhaziev
-Tags: frontend, image, media, uploader
+Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures
 Requires at least: 3.1
 Tested up to: 3.4
 Stable tag: 0.1.2
@@ -68,11 +68,11 @@ add_action('fu_additional_html', function() {
 
 == Changelog ==
 
-= 0.1.2 (June 6, 2012)
+= 0.1.2 (June 6, 2012) =
 
 * Added localization strings 
 
-= 0.1.1 (May 23, 2012)
+= 0.1.1 (May 23, 2012) =
 
 * Feature: allow form customization
 * Feature: re-attach attachment to different post
