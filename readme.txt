@@ -1,9 +1,9 @@
 === Frontend Uploader ===
 Contributors: rinatkhaziev
-Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures
+Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file
 Requires at least: 3.1
 Tested up to: 3.4
-Stable tag: 0.1.2
+Stable tag: 0.2
 
 This plugin allows your visitors to upload User Generated Content.
 
@@ -30,7 +30,7 @@ Here's example of default form (you don't need to enter all that if you want to 
 
 [fu-upload-form class="your-class" title="Upload your media"]
 [textarea name="caption" class="textarea" id="ug_caption" description="Description (optional)"]	   
-[input type="file" name="photo" id="ug_photo" class="required" description="Your Photo"]
+[input type="file" name="photo" id="ug_photo" class="required" description="Your Photo" multiple=""]
 [input type="submit" class="btn" value="Submit"]
 [/fu-upload-form]
 
@@ -44,29 +44,38 @@ Here's example of default form (you don't need to enter all that if you want to 
 
 By default plugin only allows GIF, PNG, JPG images but you can use this filter to pass additional MIME types like that:
 
-add_filter( 'fu_allowed_mime_types', function( $mime_types ) {
+add_filter( 'fu_allowed_mime_types', 'my_fu_allowed_mime_types' );
+function my_fu_allowed_mime_types( $mime_types ) {
 	$mime_types[] = 'image/tiff';
 	return $mime_types;
-} );
+}
 
 = fu_after_upload =
 
-add_action( 'fu_after_upload', function( $attachment_ids ) {
+add_action( 'fu_after_upload', 'my_fu_after_upload' );
+
+function my_fu_after_upload( $attachment_ids ) {
 	// do something with freshly uploaded files
 	// This happens on POST request, so $_POST will also be available for you
-} );
+}
 
 = fu_additional_html =
 
 Allows you to add additional HTML to form
 
-add_action('fu_additional_html', function() {
+add_action('fu_additional_html', 'my_fu_additional_html' );
+
+function my_fu_additional_html() {
 ?>
 <input type="hidden" name="my_custom_param" value="something" />
 <?php 
-});
+}
 
 == Changelog ==
+
+= 0.2 (August 15, 2012) =
+
+* Utilized support of "multiple" file tag attribute in modern browsers, that allows multiple files upload at once ( no IE )
 
 = 0.1.2 (June 6, 2012) =
 
