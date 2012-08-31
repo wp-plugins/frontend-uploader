@@ -59,7 +59,7 @@ class FE_WP_Media_List_Table extends WP_Media_List_Table {
 		$type_links['detached'] = '<a href="upload.php?detached=1"' . ( $this->detached ? ' class="current"' : '' ) . '>' . sprintf( _nx( 'Unattached <span class="count">(%s)</span>', 'Unattached <span class="count">(%s)</span>', $total_orphans, 'detached files' ), number_format_i18n( $total_orphans ) ) . '</a>';
 
 		if ( !empty($_num_posts['trash']) )
-			$type_links['trash'] = '<a href="upload.php?status=trash"' . ( (isset($_GET['status']) && $_GET['status'] == 'trash' ) ? ' class="current"' : '') . '>' . sprintf( _nx( 'Trash <span class="count">(%s)</span>', 'Trash <span class="count">(%s)</span>', $_num_posts['trash'], 'uploaded files' ), number_format_i18n( $_num_posts['trash'] ) ) . '</a>';
+			$type_links['trash'] = '<a href="upload.php?status=trash"' . ( (isset($_GET['status']) && $_GET['status'] == 'trash' ) ? ' class="current"' : '' ) . '>' . sprintf( _nx( 'Trash <span class="count">(%s)</span>', 'Trash <span class="count">(%s)</span>', $_num_posts['trash'], 'uploaded files' ), number_format_i18n( $_num_posts['trash'] ) ) . '</a>';
 
 		return array();
 	}
@@ -111,7 +111,6 @@ class FE_WP_Media_List_Table extends WP_Media_List_Table {
 		/* translators: column name */
 		$posts_columns['date'] = _x( 'Date', 'column name' );
 		$posts_columns = apply_filters( 'manage_fu_media_columns', $posts_columns, $this->detached );
-
 		return $posts_columns;
 	}
 
@@ -128,7 +127,7 @@ class FE_WP_Media_List_Table extends WP_Media_List_Table {
 				continue;
 
 			$alt = ( 'alternate' == $alt ) ? '' : 'alternate';
-			$post_owner = ( get_current_user_id() == $post->post_author ) ? 'self' : 'other';
+			$post_owner = ( get_current_user_id() == $post->post_author ) ? 'self' : 'other' ;
 			$att_title = _draft_or_post_title();
 ?>
 	<tr id='post-<?php echo $id; ?>' class='<?php echo trim( $alt . ' author-' . $post_owner . ' status-' . $post->post_status ); ?>' valign="top">
@@ -306,8 +305,8 @@ foreach ( $columns as $column_name => $column_display_name ) {
 					$actions['delete'] = "<a class='submitdelete'$delete_ays href='" . wp_nonce_url( "post.php?action=delete&amp;post=$post->ID", 'delete-attachment_' . $post->ID ) . "'>" . __( 'Delete Permanently', 'frontend-uploader' ) . "</a>";
 				}
 
-				if ($post->post_status == 'private') {
-				  $actions['pass'] = '<a href="'.admin_url('admin-ajax.php').'?action=approve_ugc&id=' . $post->ID . '">'. __('Approve', 'frontend-uploader') .'</a>';
+				if ($post->post_status == 'private' ) {
+				  $actions['pass'] = '<a href="'.admin_url('admin-ajax.php' ).'?action=approve_ugc&id=' . $post->ID . '">'. __('Approve', 'frontend-uploader' ) .'</a>';
 				}
 			}
 			if ( !$this->is_trash ) {
@@ -326,7 +325,7 @@ foreach ( $columns as $column_name => $column_display_name ) {
 // Re-attach Media
 // http://wordpress.org/support/topic/detach-amp-re-attach-media-attachment-images-from-posts
 
-add_filter("manage_fu_media_columns", 'fu_upload_columns');
+add_filter("manage_fu_media_columns", 'fu_upload_columns' );
 add_action("manage_fu_media_custom_column", 'fu_media_custom_columns', 0, 2);
 
 function fu_upload_columns( $columns ) {
@@ -347,15 +346,15 @@ function fu_media_custom_columns( $column_name, $id ) {
 				$title = '<em>Untitled</em>';
 			}
 			?>
-			<strong><a href="<?php echo get_edit_post_link( $post->post_parent ); ?>"><?php echo $title ?></a></strong>, <?php echo get_the_time(__('Y/m/d', 'frontend-uploader')); ?>
+			<strong><a href="<?php echo get_edit_post_link( $post->post_parent ); ?>"><?php echo $title ?></a></strong>, <?php echo get_the_time(__('Y/m/d', 'frontend-uploader' )); ?>
 			<br />
-			<a class="hide-if-no-js" onclick="findPosts.open('media[]','<?php echo $post->ID ?>');return false;" href="#the-list"><?php __('Re-Attach', 'frontend-uploader'); ?></a>
+			<a class="hide-if-no-js" onclick="findPosts.open('media[]','<?php echo $post->ID ?>' );return false;" href="#the-list"><?php _e('Re-Attach', 'frontend-uploader' ); ?></a>
 
 			<?php
 		} else {
 			?>
-			<?php __('(Unattached)', 'frontend-uploader'); ?><br />
-			<a class="hide-if-no-js" onclick="findPosts.open('media[]','<?php echo $post->ID ?>');return false;" href="#the-list"><?php __('Attach', 'frontend-uploader'); ?></a>
+			<?php __('(Unattached)', 'frontend-uploader' ); ?><br />
+			<a class="hide-if-no-js" onclick="findPosts.open('media[]','<?php echo $post->ID ?>' );return false;" href="#the-list"><?php _e('Attach', 'frontend-uploader' ); ?></a>
 			<?php
 		}
 }
