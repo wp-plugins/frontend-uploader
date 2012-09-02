@@ -3,7 +3,7 @@
 Plugin Name: UGC Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev
-Version: 0.2
+Version: 0.2.2
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -24,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 */
 
-
 // Define our paths and urls and bootstrap
-define( 'UGC_VERSION', '0.2' );
+define( 'UGC_VERSION', '0.2.2' );
 define( 'UGC_ROOT' , dirname( __FILE__ ) );
 define( 'UGC_FILE_PATH' , UGC_ROOT . '/' . basename( __FILE__ ) );
 define( 'UGC_URL' , plugins_url( '/', __FILE__ ) );
@@ -39,6 +38,17 @@ class Frontend_Uploader {
 	public $allowed_mime_types;
 	public $html;
 	
+	/**
+	 * Load the translation of the plugin
+	 *
+	 * @return void
+	 * @author Gaston Besada
+	 */
+	function l10n()
+	{
+		load_plugin_textdomain( 'frontend-uploader', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+	}
+		
 	function __construct() {
 		// Hooking to wp_ajax
 		add_action( 'wp_ajax_upload_ugphoto', array( $this, 'upload_photo' ) );
@@ -53,12 +63,23 @@ class Frontend_Uploader {
 		add_shortcode( 'textarea', array( $this, 'shortcode_content_parser' ) );
 		
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		// Localization
+		add_action( 'init', array( $this, 'l10n' ) );
 		
 		// Configuration filter:
 		// fu_allowed_mime_types should return array of allowed mime types
-		$this->allowed_mime_types = apply_filters( 'fu_allowed_mime_types', array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif') );
+		$this->allowed_mime_types = apply_filters( 'fu_allowed_mime_types', array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' ) );
+
+		// Disallow php files no matter what (this is a full list of possible mime types for php scripts)
+		$no_pasaran = array( 'application/x-php', 'text/x-php', 'text/php', 'application/php', 'application/x-httpd-php', 'application/x-httpd-php-source' );
+		// THEY SHALL NOT PASS
+		foreach ( $no_pasaran as $np ) {
+			if ( false !== ( $key = array_search( $np, $this->allowed_mime_types ) ) ) {
+				unset( $this->allowed_mime_types[$key] );
+			}
+		}
 		// HTML helper to render HTML elements
-		$this->html = new Html_Helper;
+		$this->html = new Html_Helper;		
 	}
 
 	/**
@@ -77,7 +98,7 @@ class Frontend_Uploader {
 		$files = current( $_FILES );
 		
 		for( $i = 0; $i < count( $_FILES['photo']['name'] ); $i++ ) {
-			$fields = array('name','type', 'tmp_name', 'error', 'size' );
+			$fields = array( 'name','type', 'tmp_name', 'error', 'size' );
 			foreach ( $fields as $field ) {
 				$k[$field] = $files[$field][$i]; 
 			}
@@ -89,9 +110,12 @@ class Frontend_Uploader {
 				$post_overrides = array(
 					'post_status' => 'private',
 					'post_title' => isset( $_POST['caption'] ) && ! empty( $_POST['caption'] ) ? filter_var( $_POST['caption'], FILTER_SANITIZE_STRING ) : 'Unnamed',
-					'post_content' => !empty( $_POST['name'] ) ? 'Courtesy of ' . filter_var($_POST['name'], FILTER_SANITIZE_STRING) : '',
+					'post_content' => !empty( $_POST['name'] ) ? __( 'Courtesy of ', 'frontend-uploader' ) . filter_var($_POST['name'], FILTER_SANITIZE_STRING) : '',
 				);
 				$media_ids[] =  media_handle_sideload( $k, intval( $_POST['post_ID'] ), $post_overrides['post_title'], $post_overrides );
+			}else{
+				wp_redirect ( add_query_arg( array( 'response' => 'ugc-disallowed_mime_type' ), $_POST['_wp_http_referer'] ) );
+				die;
 			}
 		}
 	}
@@ -122,53 +146,53 @@ class Frontend_Uploader {
 ?>
 <div class="wrap">
 <?php screen_icon(); ?>
-<h2><?php echo esc_html( $title ); ?> <a href="media-new.php" class="add-new-h2"><?php echo esc_html_x('Add New', 'file'); ?></a> <?php
+<h2><?php echo esc_html( $title ); ?> <a href="media-new.php" class="add-new-h2"><?php echo esc_html_x( 'Add New', 'file' ); ?></a> <?php
 if ( isset($_REQUEST['s']) && $_REQUEST['s'] )
-	printf( '<span class="subtitle">' . __('Search results for &#8220;%s&#8221;') . '</span>', get_search_query() ); ?>
+	printf( '<span class="subtitle">' . __( 'Search results for &#8220;%s&#8221;', 'frontend-uploader' ) . '</span>', get_search_query() ); ?>
 </h2>
 
 <?php
 $message = '';
 if ( isset($_GET['posted']) && (int) $_GET['posted'] ) {
-	$message = __('Media attachment updated.');
-	$_SERVER['REQUEST_URI'] = remove_query_arg(array('posted'), $_SERVER['REQUEST_URI']);
+	$message = __( 'Media attachment updated.', 'frontend-uploader' );
+	$_SERVER['REQUEST_URI'] = remove_query_arg(array( 'posted' ), $_SERVER['REQUEST_URI']);
 }
 
 if ( isset($_GET['attached']) && (int) $_GET['attached'] ) {
 	$attached = (int) $_GET['attached'];
-	$message = sprintf( _n('Reattached %d attachment.', 'Reattached %d attachments.', $attached), $attached );
-	$_SERVER['REQUEST_URI'] = remove_query_arg(array('attached'), $_SERVER['REQUEST_URI']);
+	$message = sprintf( _n( 'Reattached %d attachment.', 'Reattached %d attachments.', $attached), $attached );
+	$_SERVER['REQUEST_URI'] = remove_query_arg(array( 'attached' ), $_SERVER['REQUEST_URI']);
 }
 
 if ( isset($_GET['deleted']) && (int) $_GET['deleted'] ) {
 	$message = sprintf( _n( 'Media attachment permanently deleted.', '%d media attachments permanently deleted.', $_GET['deleted'] ), number_format_i18n( $_GET['deleted'] ) );
-	$_SERVER['REQUEST_URI'] = remove_query_arg(array('deleted'), $_SERVER['REQUEST_URI']);
+	$_SERVER['REQUEST_URI'] = remove_query_arg(array( 'deleted' ), $_SERVER['REQUEST_URI']);
 }
 
 if ( isset($_GET['trashed']) && (int) $_GET['trashed'] ) {
 	$message = sprintf( _n( 'Media attachment moved to the trash.', '%d media attachments moved to the trash.', $_GET['trashed'] ), number_format_i18n( $_GET['trashed'] ) );
-	$message .= ' <a href="' . esc_url( wp_nonce_url( 'upload.php?doaction=undo&action=untrash&ids='.(isset($_GET['ids']) ? $_GET['ids'] : ''), "bulk-media" ) ) . '">' . __('Undo') . '</a>';
-	$_SERVER['REQUEST_URI'] = remove_query_arg(array('trashed'), $_SERVER['REQUEST_URI']);
+	$message .= ' <a href="' . esc_url( wp_nonce_url( 'upload.php?doaction=undo&action=untrash&ids='.(isset($_GET['ids']) ? $_GET['ids'] : '' ), "bulk-media" ) ) . '">' . __( 'Undo', 'frontend-uploader' ) . '</a>';
+	$_SERVER['REQUEST_URI'] = remove_query_arg(array( 'trashed' ), $_SERVER['REQUEST_URI']);
 }
 
 if ( isset($_GET['untrashed']) && (int) $_GET['untrashed'] ) {
 	$message = sprintf( _n( 'Media attachment restored from the trash.', '%d media attachments restored from the trash.', $_GET['untrashed'] ), number_format_i18n( $_GET['untrashed'] ) );
-	$_SERVER['REQUEST_URI'] = remove_query_arg(array('untrashed'), $_SERVER['REQUEST_URI']);
+	$_SERVER['REQUEST_URI'] = remove_query_arg(array( 'untrashed' ), $_SERVER['REQUEST_URI']);
 }
 
 if (isset($_GET['approved'])) {
   $message = 'The photo was approved';
 }
 
-$messages[1] = __('Media attachment updated.');
-$messages[2] = __('Media permanently deleted.');
-$messages[3] = __('Error saving media attachment.');
-$messages[4] = __('Media moved to the trash.') . ' <a href="' . esc_url( wp_nonce_url( 'upload.php?doaction=undo&action=untrash&ids='.(isset($_GET['ids']) ? $_GET['ids'] : ''), "bulk-media" ) ) . '">' . __('Undo') . '</a>';
-$messages[5] = __('Media restored from the trash.');
+$messages[1] = __( 'Media attachment updated.', 'frontend-uploader' );
+$messages[2] = __( 'Media permanently deleted.', 'frontend-uploader' );
+$messages[3] = __( 'Error saving media attachment.', 'frontend-uploader' );
+$messages[4] = __( 'Media moved to the trash.', 'frontend-uploader' ) . ' <a href="' . esc_url( wp_nonce_url( 'upload.php?doaction=undo&action=untrash&ids='.(isset($_GET['ids']) ? $_GET['ids'] : '' ), "bulk-media" ) ) . '">' . __( 'Undo', 'frontend-uploader' ) . '</a>';
+$messages[5] = __( 'Media restored from the trash.', 'frontend-uploader' );
 
 if ( isset($_GET['message']) && (int) $_GET['message'] ) {
 	$message = $messages[$_GET['message']];
-	$_SERVER['REQUEST_URI'] = remove_query_arg(array('message'), $_SERVER['REQUEST_URI']);
+	$_SERVER['REQUEST_URI'] = remove_query_arg(array( 'message' ), $_SERVER['REQUEST_URI']);
 }
 
 if ( !empty($message) ) { ?>
@@ -179,7 +203,7 @@ if ( !empty($message) ) { ?>
 
 <form id="posts-filter" action="" method="get">
 
-<?php $wp_list_table->search_box( __( 'Search Media' ), 'media' ); ?>
+<?php $wp_list_table->search_box( __( 'Search Media', 'frontend-uploader' ), 'media' ); ?>
 
 <?php $wp_list_table->display(); ?>
 
@@ -205,7 +229,7 @@ if ( !empty($message) ) { ?>
 	
 		$post = get_post($_GET['id']);
 	
-		if ( is_object( $post ) && $post->post_status == 'private') {
+		if ( is_object( $post ) && $post->post_status == 'private' ) {
 			$post->post_status = 'inherit';
 			wp_update_post( $post );
 			wp_redirect( get_admin_url( null,'upload.php?page=manage_frontend_uploader&approved=1' ) );
@@ -236,9 +260,9 @@ if ( !empty($message) ) { ?>
 			case 'textarea':
 				echo $this->html->element( 'label',
 					$description .
-					$this->html->element('textarea', '', array( 'name' => $name, 'id' => $id, 'class' => $class ) )
+					$this->html->element( 'textarea', '', array( 'name' => $name, 'id' => $id, 'class' => $class ) )
 					,
-					array('for' => $id ),
+					array( 'for' => $id ),
 					false );
 			break;
 			case 'input':
@@ -291,9 +315,13 @@ if ( !empty($message) ) { ?>
 			do_shortcode( $content );
 		// Or render default form	
 		else:
-			do_shortcode( ' [textarea name="caption" class="textarea" id="ug_caption" description="Description (optional)"]	   
-						    [input type="file" name="photo" id="ug_photo" class="required" description="Your Photo" multiple=""]
-							[input type="submit" class="btn" value="Submit"]');
+		$textareadesc = __( 'Description (optional)', 'frontend-uploader' );
+		$filedesc = __( 'Your Photo', 'frontend-uploader' );
+		$submitb = __( 'Submit', 'frontend-uploader' );
+		
+			do_shortcode( ' [textarea name="caption" class="textarea" id="ug_caption" description="'. $textareadesc .'"]	   
+						    [input type="file" name="photo" id="ug_photo" class="required" description="'. $filedesc .'" multiple=""]
+							[input type="submit" class="btn" value="'. $submitb .'"]' );
 ?>	  		
 <?php endif; ?>		  
 		  <input type="hidden" name="action" value="upload_ugphoto" />
@@ -321,6 +349,9 @@ if ( !empty($message) ) { ?>
 			case 'nonce-failure':
 				$title = __( 'Security check failed', 'frontend-uploader' );
 			break;
+			case 'ugc-disallowed_mime_type':
+				$title = __( 'This kind of file is not allowed. Please, try again selecting other file.', 'frontend-uploader' );
+				break;
 			default:
 			    $title = '';
 		}
@@ -334,6 +365,13 @@ if ( !empty($message) ) { ?>
 		wp_enqueue_style( 'frontend-uploader', UGC_URL . '/lib/css/frontend-uploader.css' );
 		wp_enqueue_script( 'jquery-validate', 'http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js', array( 'jquery' ) );
 		wp_enqueue_script( 'frontend-uploader-js', UGC_URL . '/lib/js/frontend-uploader.js', array( 'jquery', 'jquery-validate' ) );
+
+		// Include localization strings for default messages of validation plugin
+		if ( '' != WPLANG ) {
+			$lang = explode( '_', WPLANG );
+			$url = "http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/localization/messages_{$lang[0]}.js";
+			wp_enqueue_script( 'jquery-validate-messages', $url, array( 'jquery' ) );
+		}
 	}
 	
 }

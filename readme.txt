@@ -1,9 +1,9 @@
 === Frontend Uploader ===
-Contributors: rinatkhaziev
+Contributors: rinatkhaziev, gastonbesada
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file
 Requires at least: 3.1
 Tested up to: 3.4
-Stable tag: 0.2
+Stable tag: 0.2.2
 
 This plugin allows your visitors to upload User Generated Content.
 
@@ -14,6 +14,10 @@ This plugin is useful if you want to power up your site with user generated cont
 * Approve
 * Delete
 * Re-attach to other post/page/custom-post-type
+
+Translations:
+* Se habla español (props gastonbesada) (Spanish)
+* Мы говорим по-русски (Russian)
 
 [Fork the plugin on Github](https://github.com/rinatkhaziev/wp-frontend-uploader/)
 
@@ -44,34 +48,48 @@ Here's example of default form (you don't need to enter all that if you want to 
 
 By default plugin only allows GIF, PNG, JPG images but you can use this filter to pass additional MIME types like that:
 
-add_filter( 'fu_allowed_mime_types', 'my_fu_allowed_mime_types' );
+`add_filter( 'fu_allowed_mime_types', 'my_fu_allowed_mime_types' );
 function my_fu_allowed_mime_types( $mime_types ) {
 	$mime_types[] = 'image/tiff';
 	return $mime_types;
-}
+}`
 
 = fu_after_upload =
 
-add_action( 'fu_after_upload', 'my_fu_after_upload' );
+`add_action( 'fu_after_upload', 'my_fu_after_upload' );
 
 function my_fu_after_upload( $attachment_ids ) {
 	// do something with freshly uploaded files
 	// This happens on POST request, so $_POST will also be available for you
-}
+}`
 
 = fu_additional_html =
 
 Allows you to add additional HTML to form
 
-add_action('fu_additional_html', 'my_fu_additional_html' );
+`add_action('fu_additional_html', 'my_fu_additional_html' );
 
 function my_fu_additional_html() {
 ?>
 <input type="hidden" name="my_custom_param" value="something" />
 <?php 
-}
+}`
 
 == Changelog ==
+
+= 0.2.2 (Sep 2, 2012) =
+
+* Hardened security. Even if user for some reason will allow PHP file uploads, they won't be uploaded.
+* Added Russian translation
+* Added translations for jquery.validate plugin
+
+= 0.2.1.1 (August 30, 2021) =
+
+* Added missing localization strings
+
+= 0.2.1 (August 30, 2012) =
+
+* Added l10n support, added spanish translation. Props gastonbesada
 
 = 0.2 (August 15, 2012) =
 
