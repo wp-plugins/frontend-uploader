@@ -3,7 +3,7 @@
 Plugin Name: UGC Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev
-Version: 0.2.1
+Version: 0.2.2
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 // Define our paths and urls and bootstrap
-define( 'UGC_VERSION', '0.2.1.1' );
+define( 'UGC_VERSION', '0.2.2' );
 define( 'UGC_ROOT' , dirname( __FILE__ ) );
 define( 'UGC_FILE_PATH' , UGC_ROOT . '/' . basename( __FILE__ ) );
 define( 'UGC_URL' , plugins_url( '/', __FILE__ ) );
@@ -69,6 +69,15 @@ class Frontend_Uploader {
 		// Configuration filter:
 		// fu_allowed_mime_types should return array of allowed mime types
 		$this->allowed_mime_types = apply_filters( 'fu_allowed_mime_types', array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' ) );
+
+		// Disallow php files no matter what (this is a full list of possible mime types for php scripts)
+		$no_pasaran = array( 'application/x-php', 'text/x-php', 'text/php', 'application/php', 'application/x-httpd-php', 'application/x-httpd-php-source' );
+		// THEY SHALL NOT PASS
+		foreach ( $no_pasaran as $np ) {
+			if ( false !== ( $key = array_search( $np, $this->allowed_mime_types ) ) ) {
+				unset( $this->allowed_mime_types[$key] );
+			}
+		}
 		// HTML helper to render HTML elements
 		$this->html = new Html_Helper;		
 	}
@@ -356,6 +365,13 @@ if ( !empty($message) ) { ?>
 		wp_enqueue_style( 'frontend-uploader', UGC_URL . '/lib/css/frontend-uploader.css' );
 		wp_enqueue_script( 'jquery-validate', 'http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js', array( 'jquery' ) );
 		wp_enqueue_script( 'frontend-uploader-js', UGC_URL . '/lib/js/frontend-uploader.js', array( 'jquery', 'jquery-validate' ) );
+
+		// Include localization strings for default messages of validation plugin
+		if ( '' != WPLANG ) {
+			$lang = explode( '_', WPLANG );
+			$url = "http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/localization/messages_{$lang[0]}.js";
+			wp_enqueue_script( 'jquery-validate-messages', $url, array( 'jquery' ) );
+		}
 	}
 	
 }
