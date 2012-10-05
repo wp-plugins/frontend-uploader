@@ -1,159 +1,150 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: UGC Frontend Uploader v0.2.2\n"
-"Report-Msgid-Bugs-To: http://wordpress.org/tag/wp-frontend-uploader\n"
-"POT-Creation-Date: 2012-09-01 23:44:34+00:00\n"
-"PO-Revision-Date: 2012-10-05 19:17:17+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/frontend-uploader\n"
+"POT-Creation-Date: 2012-08-30 05:30:59+00:00\n"
+"PO-Revision-Date: 2012-10-05 19:17:13+0000\n"
+"Last-Translator: Guillaume Duhec <guillaume@guillaumeduhec.com>\n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Poedit-Language: \n"
 "X-Poedit-Country: \n"
-"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;__ngettext:1,2;_n:1,2;__ngettext_noop:1,2;_n_noop:1,2;_c,_nc:4c,1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;_nx_noop:4c,1,2;\n"
-"X-Poedit-Basepath: \n"
+"X-Poedit-Basepath: ../\n"
 "X-Poedit-Bookmarks: \n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Textdomain-Support: yes"
-
-#: frontend-uploader.php:118
-#@ frontend-uploader
-msgid "Courtesy of "
-msgstr "Загрузил(а)"
 
 #: frontend-uploader.php:146
 #: frontend-uploader.php:233
 #@ frontend-uploader
 msgid "Manage UGC"
-msgstr "Модерация UGC"
+msgstr "Organiser les UGC"
 
 #: frontend-uploader.php:149
 #@ frontend-uploader
 msgid "You do not have permission to upload files."
-msgstr "Вы не можете загружать файлы."
+msgstr "Vous n'avez pas les permissions nécessaires pour envoyer des fichiers."
 
 #: frontend-uploader.php:162
 #@ default
 msgctxt "file"
 msgid "Add New"
-msgstr "Загрузить"
+msgstr "Ajouter"
 
 #: frontend-uploader.php:164
 #, php-format
 #@ frontend-uploader
 msgid "Search results for &#8220;%s&#8221;"
-msgstr "Результаты поиска по запросу &#8220;%s&#8221;"
+msgstr "Résultats de recherche pour &#8220;%s&#8221;"
 
 #: frontend-uploader.php:170
 #: frontend-uploader.php:200
 #@ frontend-uploader
 msgid "Media attachment updated."
-msgstr "Файл обновлен"
+msgstr "Fichier média mis à jour."
 
 #: frontend-uploader.php:176
 #, php-format
 #@ default
 msgid "Reattached %d attachment."
 msgid_plural "Reattached %d attachments."
-msgstr[0] "%d файл  переприкреплён"
-msgstr[1] "%d файла переприкреплено"
-msgstr[2] "%d файлов переприкреплено"
+msgstr[0] "Rattachement de %d fichiers attaché."
+msgstr[1] "Rattachement de %d fichiers attachés."
 
 #: frontend-uploader.php:181
 #, php-format
 #@ default
 msgid "Media attachment permanently deleted."
 msgid_plural "%d media attachments permanently deleted."
-msgstr[0] "Файл удален"
-msgstr[1] "%d файла удалено"
-msgstr[2] "%d файлов удалено"
+msgstr[0] "Fichier média supprimé définitivement."
+msgstr[1] "%d fichiers média supprimés définitivement."
 
 #: frontend-uploader.php:186
 #, php-format
 #@ default
 msgid "Media attachment moved to the trash."
 msgid_plural "%d media attachments moved to the trash."
-msgstr[0] "Файл перемещён в корзину"
-msgstr[1] "%d файла перемещено в корзину"
-msgstr[2] "%d файлов перемещено в корзину"
+msgstr[0] "Fichier média mis à la corbeille."
+msgstr[1] "%d fichiers média mis à la corbeille."
 
 #: frontend-uploader.php:187
 #: frontend-uploader.php:203
 #@ frontend-uploader
 msgid "Undo"
-msgstr "Отменить"
+msgstr "Annuler"
 
 #: frontend-uploader.php:192
 #, php-format
 #@ default
 msgid "Media attachment restored from the trash."
 msgid_plural "%d media attachments restored from the trash."
-msgstr[0] "Файл восстановлен из корзины"
-msgstr[1] "%d файла восстановлено из корзины"
-msgstr[2] "%d файлов восстановлено из корзины"
+msgstr[0] "Fichier média récupéré depuis la corbeille."
+msgstr[1] "%d fichiers média récupérés depuis la corbeille."
 
 #: frontend-uploader.php:201
 #@ frontend-uploader
 msgid "Media permanently deleted."
-msgstr "Файл удален"
+msgstr "Fichier média supprimé définitivement."
 
 #: frontend-uploader.php:202
 #@ frontend-uploader
 msgid "Error saving media attachment."
-msgstr "Произошла ошибка при сохранении файла"
+msgstr "Erreur d'enregistrement du fichier média."
 
 #: frontend-uploader.php:203
 #@ frontend-uploader
 msgid "Media moved to the trash."
-msgstr "Файл перемещен в корзину"
+msgstr "Fichier média mis à la corbeille."
 
 #: frontend-uploader.php:204
 #@ frontend-uploader
 msgid "Media restored from the trash."
-msgstr "Файл восстановлен из корзины"
+msgstr "Fichier média récupéré depuis la corbeille."
 
 #: frontend-uploader.php:219
 #@ frontend-uploader
 msgid "Search Media"
-msgstr "Поиск файла"
+msgstr "Rechercher un fichier média"
 
 #: frontend-uploader.php:304
 #@ frontend-uploader
 msgid "Upload a photo"
-msgstr "Загрузить файл"
+msgstr "Envoyer une image"
 
 #: frontend-uploader.php:323
 #@ frontend-uploader
 msgid "Description (optional)"
-msgstr "Описание (не обязательно)"
+msgstr "Description (facultatif)"
 
 #: frontend-uploader.php:324
 #@ frontend-uploader
 msgid "Your Photo"
-msgstr "Ваш файл"
+msgstr "Votre image"
 
 #: frontend-uploader.php:325
 #@ frontend-uploader
 msgid "Submit"
-msgstr "Загрузить"
+msgstr "Envoyer"
 
 #: frontend-uploader.php:354
 #@ frontend-uploader
 msgid "Your file was successfully uploaded!"
-msgstr "Файл был загружен"
+msgstr "Votre fichier a été envoyé avec succès !"
 
 #: frontend-uploader.php:358
 #@ frontend-uploader
 msgid "Security check failed"
-msgstr "Что-то подозрительное происходит"
+msgstr "Le contrôle de sécurité a échoué."
 
 #: frontend-uploader.php:362
 #@ frontend-uploader
 msgid "This kind of file is not allowed. Please, try again selecting other file."
-msgstr "Файл данного типа не разрешено загружать. Попробуйте другой файл"
+msgstr "Ce type de fichier n'est pas autorisé. Merci d'essayer avec un autre fichier."
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:47
 #, php-format
@@ -161,9 +152,8 @@ msgstr "Файл данного типа не разрешено загружа�
 msgctxt "uploaded files"
 msgid "All <span class=\"count\">(%s)</span>"
 msgid_plural "All <span class=\"count\">(%s)</span>"
-msgstr[0] "Все <span class=\"count\">(%s)</span>"
-msgstr[1] "Все <span class=\"count\">(%s)</span>"
-msgstr[2] "Все <span class=\"count\">(%s)</span>"
+msgstr[0] "Tous <span class=\"count\">(%s)</span>"
+msgstr[1] "Tous <span class=\"count\">(%s)</span>"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:59
 #, php-format
@@ -171,9 +161,8 @@ msgstr[2] "Все <span class=\"count\">(%s)</span>"
 msgctxt "detached files"
 msgid "Unattached <span class=\"count\">(%s)</span>"
 msgid_plural "Unattached <span class=\"count\">(%s)</span>"
-msgstr[0] "Неприкреплённые <span class=\"count\">(%s)</span>"
-msgstr[1] "Неприкреплённые <span class=\"count\">(%s)</span>"
-msgstr[2] "Неприкреплённые <span class=\"count\">(%s)</span>"
+msgstr[0] "Non attaché <span class=\"count\">(%s)</span>"
+msgstr[1] "Non attachés <span class=\"count\">(%s)</span>"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:62
 #, php-format
@@ -181,145 +170,149 @@ msgstr[2] "Неприкреплённые <span class=\"count\">(%s)</span>"
 msgctxt "uploaded files"
 msgid "Trash <span class=\"count\">(%s)</span>"
 msgid_plural "Trash <span class=\"count\">(%s)</span>"
-msgstr[0] "Корзина <span class=\"count\">(%s)</span>"
-msgstr[1] "Корзина <span class=\"count\">(%s)</span>"
-msgstr[2] "Корзина <span class=\"count\">(%s)</span>"
+msgstr[0] "Corbeille <span class=\"count\">(%s)</span>"
+msgstr[1] "Corbeille <span class=\"count\">(%s)</span>"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:69
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:289
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:305
 #@ frontend-uploader
 msgid "Delete Permanently"
-msgstr "Удалить навсегда"
+msgstr "Supprimer définitivement"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:71
 #@ frontend-uploader
 msgid "Attach to a post"
-msgstr "Прикрепить к посту"
+msgstr "Joindre à un article"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:97
 #@ frontend-uploader
 msgid "No media attachments found."
-msgstr "Файлов не найдено"
+msgstr "Aucun fichier média."
 
 #. translators: column name 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:105
 #@ default
 msgctxt "column name"
 msgid "File"
-msgstr "Файл"
+msgstr "Fichier"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:106
 #@ frontend-uploader
 msgid "Author"
-msgstr "Автор"
+msgstr "Auteur"
 
 #. translators: column name 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:109
 #@ default
 msgctxt "column name"
 msgid "Attached to"
-msgstr "Прикреплен к"
+msgstr "Attaché à"
 
 #. translators: column name 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:112
 #@ default
 msgctxt "column name"
 msgid "Date"
-msgstr "Дата"
+msgstr "Date"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:164
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:177
 #, php-format
 #@ frontend-uploader
 msgid "Edit \"%s\""
-msgstr "Редактировать"
+msgstr "Modifier \"%s\""
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:209
 #@ frontend-uploader
 msgid "No Tags"
-msgstr "Нет тэгов"
+msgstr "Aucun mot-clef."
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:224
 #@ frontend-uploader
 msgid "Unpublished"
-msgstr "Не прикреплен"
+msgstr "Non publié"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:226
 #@ frontend-uploader
 msgid "Y/m/d g:i:s A"
-msgstr "Y/m/d g:i:s A"
+msgstr "d/m/Y H:i:s"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:231
 #, php-format
 #@ frontend-uploader
 msgid "%s from now"
-msgstr "%s спустя"
+msgstr "%s à partir de maintenant"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:233
 #, php-format
 #@ frontend-uploader
 msgid "%s ago"
-msgstr "%s назад"
+msgstr "Il y a %s"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:235
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:251
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:349
 #@ frontend-uploader
 msgid "Y/m/d"
-msgstr "Y/m/d"
+msgstr "d/m/Y"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:256
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:356
 #@ frontend-uploader
 msgid "(Unattached)"
-msgstr "(Не прикреплен)"
+msgstr "(Non-attaché)"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:283
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:297
 #@ frontend-uploader
 msgid "Edit"
-msgstr "Редактировать"
+msgstr "Modifier"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:286
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:302
 #@ frontend-uploader
 msgid "Trash"
-msgstr "Корзина"
+msgstr "Mettre à la corbeille"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:291
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:314
 #, php-format
 #@ frontend-uploader
 msgid "View \"%s\""
-msgstr "Просмотреть \"%s\""
+msgstr "Afficher \"%s\""
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:291
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:314
 #@ frontend-uploader
 msgid "View"
-msgstr "Просмотреть"
+msgstr "Afficher"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:293
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:357
 #@ frontend-uploader
 msgid "Attach"
-msgstr "Прикрепить"
+msgstr "Joindre"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:300
 #@ frontend-uploader
 msgid "Restore"
-msgstr "Восстановить"
+msgstr "Récupérer"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:309
 #@ frontend-uploader
 msgid "Approve"
-msgstr "Подтвердить"
+msgstr "Valider"
 
 #: lib/php/class-frontend-uploader-wp-media-list-table.php:351
 #@ frontend-uploader
 msgid "Re-Attach"
-msgstr "Переприкрепить"
+msgstr "Re-Joindre"
+
+#: frontend-uploader.php:118
+#@ frontend-uploader
+msgid "Courtesy of "
+msgstr ""
 
 #: lib/php/frontend-uploader-settings.php:29
 #@ frontend-uploader
