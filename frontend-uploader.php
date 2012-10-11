@@ -3,7 +3,7 @@
 Plugin Name: UGC Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev
-Version: 0.2.3
+Version: 0.2.4
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -25,11 +25,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 // Define our paths and urls and bootstrap
-define( 'UGC_VERSION', '0.2.3' );
+define( 'UGC_VERSION', '0.2.4' );
 define( 'UGC_ROOT' , dirname( __FILE__ ) );
 define( 'UGC_FILE_PATH' , UGC_ROOT . '/' . basename( __FILE__ ) );
 define( 'UGC_URL' , plugins_url( '/', __FILE__ ) );
 
+require_once( ABSPATH . 'wp-admin/includes/screen.php' );
 require_once UGC_ROOT . '/lib/php/class-frontend-uploader-wp-media-list-table.php';
 require_once UGC_ROOT . '/lib/php/class-html-helper.php';
 require_once UGC_ROOT . '/lib/php/settings-api/class.settings-api.php';
@@ -67,6 +68,9 @@ class Frontend_Uploader {
 		remove_filter( 'the_content', 'wpautop' );
 		add_filter( 'the_content', 'wpautop' , 99 );
 		add_filter( 'the_content', 'shortcode_unautop', 100 );
+		// Hiding not approved attachments from Media Gallery
+		// @since core 3.5-beta-1
+		add_filter( 'posts_where', array( $this, 'filter_posts_where' ) );
 
 		// Localization
 		add_action( 'init', array( $this, 'l10n' ) );
@@ -84,8 +88,26 @@ class Frontend_Uploader {
 		}
 		// HTML helper to render HTML elements
 		$this->html = new Html_Helper;
-
 		$this->settings = get_option( 'frontend_uploader_settings' ); 
+	}
+
+	/**
+	 * Since WP 3.5-beta-1 WP Media interface shows private attachments as well
+	 * We don't want that, so we force WHERE statement to post_status = 'inherit'
+	 *
+	 * @todo  probably intermediate workaround
+	 * 
+	 * @param  string $where WHERE statement
+	 * @return string WHERE statement
+	 */
+	function filter_posts_where( $where ) {
+		if ( !is_admin() ) 
+			return $where;
+		$screen = get_current_screen();
+		if ( $screen->base == 'upload' && ( !isset( $_GET['page'] ) || $_GET['page'] != 'manage_frontend_uploader' ) ) {
+			$where = str_replace( "post_status = 'private'", "post_status = 'inherit'", $where );	
+		}		
+		return $where;
 	}
 
 	/**
