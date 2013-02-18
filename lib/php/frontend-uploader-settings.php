@@ -10,22 +10,23 @@ class Frontend_Uploader_Settings {
 	function __construct() {
 		$this->settings_api = new WeDevs_Settings_API;
 
-		add_action( 'admin_init', array( $this, 'admin_init' ) );
-		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( 'current_screen', array( $this, 'action_current_screen' ) );
+		add_action( 'admin_menu', array( $this, 'action_admin_menu' ) );
 
 	}
 
-	function admin_init() {
-
+	function action_current_screen() {
+		$screen = get_current_screen();
+		if ( in_array( $screen->base, array( 'settings_page_fu_settings', 'options' ) ) ) {
+			$this->settings_api->set_sections( $this->get_settings_sections() );
+			$this->settings_api->set_fields( $this->get_settings_fields() );
+			//initialize settings
+			$this->settings_api->admin_init();			
+		}
 		//set the settings
-		$this->settings_api->set_sections( $this->get_settings_sections() );
-		$this->settings_api->set_fields( $this->get_settings_fields() );
-
-		//initialize settings
-		$this->settings_api->admin_init();
 	}
 
-	function admin_menu() {
+	function action_admin_menu() {
 		add_options_page( __( 'Frontend Uploader Settings', 'frontend-uploader' ) , __( 'Frontend Uploader Settings', 'frontend-uploader' ), 'manage_options', 'fu_settings', array( $this, 'plugin_page' ) );
 	}
 
@@ -52,6 +53,7 @@ class Frontend_Uploader_Settings {
 					'label' => __( 'Notify site admins', 'frontend-uploader' ),
 					'desc' => __( 'Yes', 'frontend-uploader' ),
 					'type' => 'checkbox',
+					'default' => '',
 				),
 				array(
 					'name' => 'admin_notification_text',
@@ -65,8 +67,36 @@ class Frontend_Uploader_Settings {
 					'label' => __( 'Notification email', 'frontend-uploader' ),
 					'desc' => __( 'Leave blank to use site admin email', 'frontend-uploader' ),
 					'type' => 'text',
+					'default' => '',
 				),
-
+				array(
+					'name' => 'allowed_categories',
+					'label' => __( 'Allowed categories', 'frontend-uploader' ),
+					'desc' => __( 'Comma separated IDs (leave blank for all)', 'frontend-uploader' ),
+					'type' => 'text',
+					'default' => '',
+				),
+				array(
+					'name' => 'user_verification',
+					'label' => __( 'User Verification callback', 'frontend-uploader' ),
+					'desc' => __( 'Leave blank for none', 'frontend-uploader' ),
+					'type' => 'text',
+					'default' => '',
+				),
+				array(
+					'name' => 'show_author',
+					'label' => __( 'Show author field', 'frontend-uploader' ),
+					'desc' => __( 'Yes', 'frontend-uploader' ),
+					'type' => 'checkbox',
+					'default' => '',
+				),
+				array(
+					'name' => 'wysiwyg_enabled',
+					'label' => __( 'Enable visual editor', 'frontend-uploader' ),
+					'desc' => __( 'Yes', 'frontend-uploader' ),
+					'type' => 'checkbox',
+					'default' => 'on',
+				),				
 			),
 		);
 
