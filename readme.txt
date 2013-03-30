@@ -1,21 +1,17 @@
 === Frontend Uploader ===
 Contributors: rinatkhaziev, rfzappala, danielbachhuber
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file
-Requires at least: 3.1
-Tested up to: 3.5.1
-Stable tag: 0.3.1
+Requires at least: 3.3
+Tested up to: 3.6-alpha-23879
+Stable tag: 0.4
 
-This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types).
+This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
 
 == Description ==
 
-This plugin is useful if you want to power up your site with user generated content and give your users ability to easily upload it. Essentially, the plugin is a customizeable upload form that adds files with allowed MIME-type to your WordPress Media Library under a special tab "Manage UGC". There you can moderate your user submissions (cause, you know, you'd better moderate 'em):
+This plugin gives you an ability to easily accept, moderate and publish user generated content (currently, there are 3 modes: media, post, post + media). The plugin allows you to create a front end form with multiple fields (easily customizable with shortcodes). You can limit which MIME-types are supported for each field. All of the submissions are safely held for moderation in Media/Post/Custom Post Types menu under a special tab "Manage UGC". Review, moderate and publish. It's that easy!
 
-* Approve
-* Delete
-* Re-attach to other post/page/custom-post-type
-
-This plugin supports multiple uploads for modern browsers (sorry, no IE). It's enabled for default form. To use it in your custom shortcode add multiple="" attribute to input shortcode.
+This plugin supports multiple uploads for modern browsers (sorry, no IE). Multiple file uploads are enabled for default form. To use it in your custom shortcode add multiple="" attribute to file shortcode.
 
 Here's example of default form (you don't need to enter all that if you want to use default form, just use [fu-upload-form]):
 
@@ -29,8 +25,11 @@ By default plugin allows all MIME-types that are whitelisted in WordPress. Howev
 
 = New in v0.4 =
 
-Now your visitors are able to upload not only media, but guest posts as well! 
+Now your visitors are able to upload not only media, but guest posts as well!
 Use [fu-upload-form form_layout="post_image"] to get default form to upload post content and images
+Use [fu-upload-form form_layout="post"] to get default form to upload post content
+
+You can also manage UGC for selected custom post types (Please refer to the plugin's settings page). By default, UGC is enabled for posts and attachments. If you want to be able to get any other post types UGC submissions just select desired post types at the plugin's settings page, and pass post_type='my_post_type' to the [fu-upload-form] shortcode
 
 = Translations: =
 
@@ -38,6 +37,7 @@ Use [fu-upload-form form_layout="post_image"] to get default form to upload post
 * Мы говорим по-русски (Russian)
 * Nous parlons français (French) (props dapickboy)
 * Nous parlons français (Canadian French) (props rfzappala)
+
 [Fork the plugin on Github](https://github.com/rinatkhaziev/wp-frontend-uploader/)
 
 == Installation ==
@@ -46,7 +46,8 @@ Use [fu-upload-form form_layout="post_image"] to get default form to upload post
 1. Activate the plugin through the 'Plugins' menu in WordPress
 1. Tweak the plugin's settings in: Settings -> Frontend Uploader Settings
 1. Use the following shortcode in post or page: [fu-upload-form]
-1. You can moderate uploaded files in Media -> Manage UGC menu
+1. Moderate uploaded files in Media -> Manage UGC menu
+1. Moderate user posts in Posts -> Manage UGC
 
 == Screenshots ==
 
@@ -90,11 +91,13 @@ function my_fu_additional_html() {
 
 == Changelog ==
 
-= 0.4 = 
+= 0.4 (Mar 30, 2013) =
 
-* Ability to upload posts+files via [fu-upload-form form_layout="post_image|post|image"] where form_layout might be "post_image", "post", or "image". Defaults to "image". /props rfzappala
+* Ability to submit posts+files via [fu-upload-form form_layout="post_image|post|image"] where form_layout might be "post_image", "post", or "image". Defaults to "image". /props rfzappala
+* Ability to submit and manage custom post types
 * Ability to use visual editor for textareas
 * Bugfixes /props danielbachhuber
+* Under the hood improvements
 
 = 0.3.1 (Jan 3, 2013) =
 
