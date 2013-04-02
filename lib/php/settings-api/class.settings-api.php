@@ -33,8 +33,8 @@ if ( !class_exists( 'WeDevs_Settings_API' ) ):
 
     public function __construct() {
         add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
-    }
-
+        add_action( 'admin_head', array( $this, 'admin_head' ) );
+		}
     /**
      * Enqueue scripts and styles
      */
@@ -44,6 +44,18 @@ if ( !class_exists( 'WeDevs_Settings_API' ) ):
         wp_enqueue_script( 'thickbox' );
     }
 
+    /**
+     * Print the JS in <head> instead of inlining it in body
+     *
+     * Proper way would be enqueueing it with wp_enqueue_script
+     * But that requires the class being packaged as an actual WP plugin
+     */
+    function admin_head() {
+        ob_start();
+        require_once __DIR__ . '/inc/js/wsa.js';
+        $output = '<script>' . ob_get_clean() . '</script>';
+        echo $output;
+    }
     /**
      * Set settings sections
      *
@@ -100,6 +112,11 @@ if ( !class_exists( 'WeDevs_Settings_API' ) ):
      * registers them to WordPress and ready for use.
      */
     function admin_init() {
+        global $parent_file; 
+        // Bail if current screen is not an options screen
+        if (  !in_array( $parent_file, array( '', 'options-general.php' ) )  )
+            return;
+
         //register settings sections
         foreach ( $this->settings_sections as $section ) {
             if ( false == get_option( $section['id'] ) ) {
@@ -325,46 +342,46 @@ if ( !class_exists( 'WeDevs_Settings_API' ) ):
     /**
      * Sanitize callback for Settings API
      */ 
-    function sanitize_options( $options ) {
-        foreach( $options as $option_slug => $option_value ) {
-            $sanitize_callback = $this->get_sanitize_callback( $option_slug );
+		function sanitize_options( $options ) {
+			foreach( $options as $option_slug => $option_value ) {
+				$sanitize_callback = $this->get_sanitize_callback( $option_slug );
 
-            // If callback is set, call it
-            if ( $sanitize_callback ) {
-                $options[ $option_slug ] = call_user_func( $sanitize_callback, $option_value );
-                continue;
-            }
+				// If callback is set, call it
+				if ( $sanitize_callback ) {
+					$options[ $option_slug ] = call_user_func( $sanitize_callback, $option_value );
+					continue;
+				}
 
-            // Treat everything that's not an array as a string
-            if ( !is_array( $option_value ) ) {
-                $options[ $option_slug ] = sanitize_text_field( $option_value );
-                continue;
-            }
-        }
-        return $options;
-    }
-        
-    /**
-     * Get sanitization callback for given option slug
-     * 
-     * @param string $slug option slug
-     * 
-     * @return mixed string or bool false
-     */ 
-    function get_sanitize_callback( $slug = '' ) {
-        if ( empty( $slug ) )
-            return false;
-        // Iterate over registered fields and see if we can find proper callback
-        foreach( $this->settings_fields as $section => $options ) {
-            foreach ( $options as $option ) {
-                if ( $option['name'] != $slug )
-                    continue;
-                // Return the callback name 
-                return isset( $option['sanitize_callback'] ) && is_callable( $option['sanitize_callback'] ) ? $option['sanitize_callback'] : false;
-            }
-        }
-        return false; 
-    }
+				// Treat everything that's not an array as a string
+				if ( !is_array( $option_value ) ) {
+					$options[ $option_slug ] = sanitize_text_field( $option_value );
+					continue;
+				}
+			}
+			return $options;
+		}
+		
+		/**
+		 * Get sanitization callback for given option slug
+		 * 
+		 * @param string $slug option slug
+		 * 
+		 * @return mixed string or bool false
+		 */ 
+		function get_sanitize_callback( $slug = '' ) {
+			if ( empty( $slug ) )
+				return false;
+			// Iterate over registered fields and see if we can find proper callback
+			foreach( $this->settings_fields as $section => $options ) {
+				foreach ( $options as $option ) {
+					if ( $option['name'] != $slug )
+						continue;
+					// Return the callback name 
+					return isset( $option['sanitize_callback'] ) && is_callable( $option['sanitize_callback'] ) ? $option['sanitize_callback'] : false;
+				}
+			}
+			return false; 
+		}
 
     /**
      * Get the value of a settings field
@@ -429,61 +446,6 @@ if ( !class_exists( 'WeDevs_Settings_API' ) ):
             </div>
         </div>
         <?php
-        $this->script();
     }
-
-    /**
-     * Tabbable JavaScript codes
-     *
-     * This code uses localstorage for displaying active tabs
-     */
-    function script() {
-        ?>
-        <script>
-            jQuery(document).ready(function($) {
-                // Switches option sections
-                $('.group').hide();
-                var activetab = '';
-                if (typeof(localStorage) != 'undefined' ) {
-                    activetab = localStorage.getItem("activetab");
-                }
-                if (activetab != '' && $(activetab).length ) {
-                    $(activetab).fadeIn();
-                } else {
-                    $('.group:first').fadeIn();
-                }
-                $('.group .collapsed').each(function(){
-                    $(this).find('input:checked').parent().parent().parent().nextAll().each(
-                    function(){
-                        if ($(this).hasClass('last')) {
-                            $(this).removeClass('hidden');
-                            return false;
-                        }
-                        $(this).filter('.hidden').removeClass('hidden');
-                    });
-                });
-
-                if (activetab != '' && $(activetab + '-tab').length ) {
-                    $(activetab + '-tab').addClass('nav-tab-active');
-                }
-                else {
-                    $('.nav-tab-wrapper a:first').addClass('nav-tab-active');
-                }
-                $('.nav-tab-wrapper a').click(function(evt) {
-                    $('.nav-tab-wrapper a').removeClass('nav-tab-active');
-                    $(this).addClass('nav-tab-active').blur();
-                    var clicked_group = $(this).attr('href');
-                    if (typeof(localStorage) != 'undefined' ) {
-                        localStorage.setItem("activetab", $(this).attr('href'));
-                    }
-                    $('.group').hide();
-                    $(clicked_group).fadeIn();
-                    evt.preventDefault();
-                });
-            });
-        </script>
-        <?php
-    }
-
 }
 endif;
