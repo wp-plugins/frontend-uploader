@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: UGC Frontend Uploader
+Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber, Ricardo Zappala
 Version: 0.4.1
@@ -24,18 +24,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 */
 
-// Define our paths and urls and bootstrap
+// Define consts and bootstrap and dependencies
 
-define( 'UGC_VERSION', '0.4.1' );
-define( 'UGC_ROOT' , dirname( __FILE__ ) );
-define( 'UGC_FILE_PATH' , UGC_ROOT . '/' . basename( __FILE__ ) );
-define( 'UGC_URL' , plugins_url( '/', __FILE__ ) );
+define( 'FU_VERSION', '0.4.1' );
+define( 'FU_ROOT' , dirname( __FILE__ ) );
+define( 'FU_FILE_PATH' , FU_ROOT . '/' . basename( __FILE__ ) );
+define( 'FU_URL' , plugins_url( '/', __FILE__ ) );
 
-require_once UGC_ROOT . '/lib/php/class-frontend-uploader-wp-media-list-table.php';
-require_once UGC_ROOT . '/lib/php/class-frontend-uploader-wp-posts-list-table.php';
-require_once UGC_ROOT . '/lib/php/class-html-helper.php';
-require_once UGC_ROOT . '/lib/php/settings-api/class.settings-api.php';
-require_once UGC_ROOT . '/lib/php/frontend-uploader-settings.php';
+require_once FU_ROOT . '/lib/php/class-frontend-uploader-wp-media-list-table.php';
+require_once FU_ROOT . '/lib/php/class-frontend-uploader-wp-posts-list-table.php';
+require_once FU_ROOT . '/lib/php/class-html-helper.php';
+require_once FU_ROOT . '/lib/php/settings-api/class.settings-api.php';
+require_once FU_ROOT . '/lib/php/frontend-uploader-settings.php';
 
 class Frontend_Uploader {
 
@@ -133,7 +133,9 @@ class Frontend_Uploader {
 		// fu_allowed_mime_types should return array of allowed mime types
 		// HTML helper to render HTML elements
 		$this->html = new Html_Helper;
-		$this->settings = get_option( $this->settings_slug, $this->settings_defaults() );
+		// Either use default settings if no setting set, or try to merge defaults with existing settings
+		// Needed if new options were added in upgraded version of the plugin
+		$this->settings = array_merge( $this->settings_defaults(), (array) get_option( $this->settings_slug, $this->settings_defaults() ) );
 		register_activation_hook( __FILE__, array( $this, 'activate_plugin' ) );
 	}
 
@@ -152,16 +154,9 @@ class Frontend_Uploader {
 	}
 
 	function activate_plugin() {
-		$defaults = array();
-		$settings = Frontend_Uploader_Settings::get_settings_fields();
-		foreach ( $settings[$this->settings_slug] as $setting ) {
-			$defaults[ $setting['name'] ] = $setting['default'];
-		}
-		if ( ! $existing_settings = get_option( $this->settings_slug ) ) {
-			update_option( $this->settings_slug, $defaults );
-		} else {
-			update_option( $this->settings_slug, array_merge( $defaults, (array) $existing_settings ) );
-		}
+		$defaults = $this->settings_defaults();
+		$existing_settings = (array) get_option( $this->settings_slug, $this->settings_defaults() );
+		update_option( $this->settings_slug, array_merge( $defaults, (array) $existing_settings ) );
 	}
 
 	/**
@@ -389,7 +384,7 @@ class Frontend_Uploader {
 		if ( empty($view ) )
 			return;
 
-		$file = UGC_ROOT . "/lib/views/{$view}.tpl.php";
+		$file = FU_ROOT . "/lib/views/{$view}.tpl.php";
 		if ( file_exists( $file ) )
 			require $file;
 	}
@@ -420,6 +415,12 @@ class Frontend_Uploader {
 
 	}
 
+	/**
+	 * Approve a media file
+	 *
+	 * @todo refactor in 0.5
+	 * @return [type] [description]
+	 */
 	function approve_photo() {
 		// Check permissions, attachment ID, and nonce
 		if ( !current_user_can( 'edit_posts' ) || intval( $_GET['id'] ) == 0 || !wp_verify_nonce( $_GET['nonceugphoto'], 'upload_ugphoto' ) )
@@ -725,19 +726,22 @@ class Frontend_Uploader {
 	 * Enqueue our assets
 	 */
 	function enqueue_scripts() {
-		wp_enqueue_style( 'frontend-uploader', UGC_URL . 'lib/css/frontend-uploader.css' );
-		wp_enqueue_script( 'jquery-validate', '//ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js', array( 'jquery' ) );
-		wp_enqueue_script( 'frontend-uploader-js', UGC_URL . 'lib/js/frontend-uploader.js', array( 'jquery', 'jquery-validate' ) );
+		wp_enqueue_style( 'frontend-uploader', FU_URL . 'lib/css/frontend-uploader.css' );
+		wp_enqueue_script( 'jquery-validate', '//ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js', array( 'jquery' ) );
+		wp_enqueue_script( 'frontend-uploader-js', FU_URL . 'lib/js/frontend-uploader.js', array( 'jquery', 'jquery-validate' ) );
 		// Include localization strings for default messages of validation plugin
 		$wplang = apply_filters( 'fu_wplang', WPLANG );
 		if ( $wplang ) {
 			$lang = explode( '_', $wplang );
-			$url = "//ajax.aspnetcdn.com/ajax/jquery.validate/1.9/localization/messages_{$lang[0]}.js";
+			$url = "//ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/localization/messages_{$lang[0]}.js";
 			wp_enqueue_script( 'jquery-validate-messages', $url, array( 'jquery' ) );
 		}
 
 	}
 
+	/**
+	 * Enqueue scripts for admin
+	 */
 	function admin_enqueue_scripts() {
 		wp_enqueue_script( 'wp-ajax-response' );
 		wp_enqueue_script( 'jquery-ui-draggable' );
