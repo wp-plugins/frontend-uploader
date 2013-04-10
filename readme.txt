@@ -3,7 +3,7 @@ Contributors: rinatkhaziev, rfzappala, danielbachhuber
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file
 Requires at least: 3.3
 Tested up to: 3.6-beta1
-Stable tag: 0.5-working
+Stable tag: 0.5
 
 This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
 
@@ -22,6 +22,10 @@ Here's example of default form (you don't need to enter all that if you want to 
 [/fu-upload-form]
 
 By default plugin allows all MIME-types that are whitelisted in WordPress. However, there's a filter if you need to add some exotic MIME-type. Refer to Other notes -> Configuration filters.
+
+= New in v0.5 =
+
+You can choose what type of files you allow your visitors to upload from Frontend Uploader Settings
 
 = New in v0.4 =
 
@@ -131,6 +135,11 @@ function my_fu_allowed_mime_types( $mime_types ) {
 
 
 == Changelog ==
+
+= 0.5 (Aprt 10, 2013) =
+
+* Ability to pick files allowed for uploading from the plugin's settings
+* Bugfix: admins won't get any notifications on unsuccessful upload any more
 
 = 0.4.2 (Apr 3, 2013) =
 
