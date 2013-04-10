@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber, Ricardo Zappala
-Version: 0.5
+Version: 0.5.1
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 // Define consts and bootstrap and dependencies
-define( 'FU_VERSION', '0.5' );
+define( 'FU_VERSION', '0.5.1' );
 define( 'FU_ROOT' , dirname( __FILE__ ) );
 define( 'FU_FILE_PATH' , FU_ROOT . '/' . basename( __FILE__ ) );
 define( 'FU_URL' , plugins_url( '/', __FILE__ ) );
@@ -175,6 +175,14 @@ class Frontend_Uploader {
 	}
 
 	/**
+	 * Determine if we should autoapprove the submission or not
+	 * @return boolean [description]
+	 */
+	function _is_public() {
+		return  ( current_user_can( 'read' ) && 'on' == $this->settings['auto_approve_user_files'] ) ||  ( 'on' == $this->settings['auto_approve_any_files'] );
+	}
+
+	/**
 	 * Check if the file could be uploaded
 	 *
 	 * @since 0.5
@@ -195,7 +203,7 @@ class Frontend_Uploader {
 
 		$conditions = array(
 			(bool)  ( in_array( $ext, $allowed_type_keys ) ),
-			(bool)  in_array( $type, $this->allowed_mime_types ) || in_array( $type, $allowed_types[$ext] ),
+			(bool)  in_array( $type, $this->allowed_mime_types ) || ( isset( $allowed_types[$ext] ) && in_array( $type, (array) $allowed_types[$ext] ) ),
 		);
 
 
@@ -255,10 +263,9 @@ class Frontend_Uploader {
 				$caption = sanitize_text_field( $_POST['caption'] );
 			elseif ( isset( $_POST['post_content'] ) )
 				$caption = sanitize_text_field( $_POST['post_content'] );
-
 			// @todo remove or refactor
 			$post_overrides = array(
-				'post_status' => 'private',
+				'post_status' => $this->_is_public() ? 'publish' : 'private',
 				'post_title' => isset( $_POST['post_title'] ) && ! empty( $_POST['post_title'] ) ? sanitize_text_field( $_POST['post_title'] ) : 'Unnamed',
 				'post_content' => empty( $caption ) ? __( 'Unnamed', 'frontend-uploader' ) : $caption,
 				'post_excerpt' => empty( $caption ) ? __( 'Unnamed', 'frontend-uploader' ) :  $caption,
@@ -291,7 +298,7 @@ class Frontend_Uploader {
 			'post_type' =>  isset( $_POST['post_type'] ) && in_array( $_POST['post_type'], get_post_types() ) ? $_POST['post_type'] : 'post',
 			'post_title'    => sanitize_text_field( $_POST['post_title'] ),
 			'post_content'  => wp_filter_post_kses( $_POST['post_content'] ),
-			'post_status'   => 'private',
+			'post_status'   => $this->_is_public() ? 'publish' : 'private',
 		);
 
 		// Determine if we have a whitelisted category
@@ -646,37 +653,38 @@ class Frontend_Uploader {
 			$this->_display_response_notices( $_GET );
 
 		// Parse nested shortcodes
-		if ( $content ):
+		if ( $content ) {
 			echo do_shortcode( $content );
 		// Or render default form
-		else:
+		} else {
 			$textarea_desc = __( 'Description', 'frontend-uploader' );
-		$file_desc = __( 'Your Photo', 'frontend-uploader' );
-		$submit_button = __( 'Submit', 'frontend-uploader' );
+			$file_desc = __( 'Your Photo', 'frontend-uploader' );
+			$submit_button = __( 'Submit', 'frontend-uploader' );
 
-		echo do_shortcode ( '[input type="text" name="post_title" id="ug_post_title" description="' . __( 'Title', 'frontend-uploader' ) . '" class="required"]' );
+			echo do_shortcode ( '[input type="text" name="post_title" id="ug_post_title" description="' . __( 'Title', 'frontend-uploader' ) . '" class="required"]' );
 
-		// here we select the different fields based on the form layout to allow for different types
-		// of uploads (only a file, only a post or a file and post)
+			// here we select the different fields based on the form layout to allow for different types
+			// of uploads (only a file, only a post or a file and post)
 
-		// @todo refactor
-		if ( $form_layout == "post_image" )
-			echo do_shortcode( '[textarea name="post_content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]
-							    [input type="file" name="photo" id="ug_photo" description="'. $file_desc .'" multiple=""]' );
-		elseif ( $form_layout == "post" )
-			echo do_shortcode( '[textarea name="post_content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]' );
-		else
-			echo do_shortcode( '[textarea name="caption" class="textarea tinymce-enabled" id="ugcaption" description="'. $textarea_desc .'"]
-									[input type="file" name="photo" id="ug_photo" class="required" description="'. $file_desc .'" multiple=""]' );
+			// @todo refactor
+			if ( $form_layout == "post_image" )
+				echo do_shortcode( '[textarea name="post_content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]
+								    [input type="file" name="photo" id="ug_photo" description="'. $file_desc .'" multiple=""]' );
+			elseif ( $form_layout == "post" )
+				echo do_shortcode( '[textarea name="post_content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]' );
+			else
+				echo do_shortcode( '[textarea name="caption" class="textarea tinymce-enabled" id="ugcaption" description="'. $textarea_desc .'"]
+										[input type="file" name="photo" id="ug_photo" class="required" description="'. $file_desc .'" multiple=""]' );
 
-		if ( isset( $this->settings['show_author'] )  && $this->settings['show_author'] )
-			echo do_shortcode ( '[input type="text" name="post_author" id="ug_post_author" description="' . __( 'Author', 'frontend-uploader' ) . '" class=""]' );
+			if ( isset( $this->settings['show_author'] )  && $this->settings['show_author'] )
+				echo do_shortcode ( '[input type="text" name="post_author" id="ug_post_author" description="' . __( 'Author', 'frontend-uploader' ) . '" class=""]' );
 
-		if ( $form_layout == "post_image" || $form_layout == "image" )
-			echo do_shortcode ( '[input type="text" name="post_credit" id="ug_post_credit" description="' . __( 'Credit', 'frontend-uploader' ) . '" class=""]' );
+			if ( $form_layout == "post_image" || $form_layout == "image" )
+				echo do_shortcode ( '[input type="text" name="post_credit" id="ug_post_credit" description="' . __( 'Credit', 'frontend-uploader' ) . '" class=""]' );
 
-		echo do_shortcode ( '[input type="submit" class="btn" value="'. $submit_button .'"]' );
-		endif; ?>
+			echo do_shortcode ( '[input type="submit" class="btn" value="'. $submit_button .'"]' );
+			}
+			?>
 		  <input type="hidden" name="action" value="upload_ugc" />
 		  <input type="hidden" value="<?php echo $post_id ?>" name="post_ID" />
 		  <input type="hidden" value="<?php echo $category; ?>" name="post_category" />
@@ -737,7 +745,7 @@ class Frontend_Uploader {
 			),
 		);
 
-		if ( isset( $map[ $res['response'] ] ) )
+		if ( isset( $res['response'] ) && isset( $map[ $res['response'] ] ) )
 			$output .= $this->_notice_html( $map[ $res['response'] ]['text'] , $map[ $res['response'] ]['class'] );
 
 		if ( !empty( $res['errors' ] ) )
