@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber, Ricardo Zappala
-Version: 0.5.1
+Version: 0.5.2
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 // Define consts and bootstrap and dependencies
-define( 'FU_VERSION', '0.5.1' );
+define( 'FU_VERSION', '0.5.2' );
 define( 'FU_ROOT' , dirname( __FILE__ ) );
 define( 'FU_FILE_PATH' , FU_ROOT . '/' . basename( __FILE__ ) );
 define( 'FU_URL' , plugins_url( '/', __FILE__ ) );
@@ -116,12 +116,19 @@ class Frontend_Uploader {
 
 			// Iterate through mime-types for this extension
 			foreach( $details['mimes'] as $ext_mime ) {
+
 				$mime_types[ $extension . '|' . $extension . sanitize_title_with_dashes( $ext_mime ) ] = $ext_mime;
 			}
 		}
-
 		// Configuration filter: fu_allowed_mime_types should return array of allowed mime types (see readme)
 		$mime_types = apply_filters( 'fu_allowed_mime_types', $mime_types );
+
+		foreach( $mime_types as $ext_key => $mime ) {
+			// Check for php just in case
+			if ( false !== strpos( $mime, 'php') )
+				unset( $mime_types[$ext_key] );
+		}
+
 		return $mime_types;
 	}
 
