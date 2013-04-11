@@ -97,40 +97,31 @@ class Frontend_Uploader {
 	 */
 	function action_init() {
 		load_plugin_textdomain( 'frontend-uploader', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-		$this->mime_types();
-
+		$this->allowed_mime_types = $this->_get_mime_types();
+		add_filter( 'upload_mimes', array( $this, '_get_mime_types' ), 999 );
 	}
 
-	/**
-	 * Workaround for allowed mime-types
-	 *
-	 * @return allowed mime-types
-	 */
-	function mime_types() {
-		// Configuration filter:
-		// fu_allowed_mime_types should return array of allowed mime types (see readme)
-		$this->allowed_mime_types = apply_filters( 'fu_allowed_mime_types', $this->fix_ie_mime_types( get_allowed_mime_types() ) );
-		// Disallow PHP files just in case
-		$no_pasaran = array( 'application/x-php', 'text/x-php', 'text/php', 'application/php', 'application/x-httpd-php', 'application/x-httpd-php-source' );
-		// THEY SHALL NOT PASS
-		foreach ( $no_pasaran as $np )
-			if ( false !== ( $key = array_search( $np, $this->allowed_mime_types ) ) )
-				unset( $this->allowed_mime_types[$key] );
-
-		apply_filters( 'upload_mimes', $this->allowed_mime_types );
-		return $this->allowed_mime_types;
-	}
-
-	/**
-	 * Add IE-specific MIME types
-	 * /props mcnasby
-	 *
-	 * @param array   $mime_types [description]
-	 * @return [type] [description]
-	 */
-	function fix_ie_mime_types( $mime_types ) {
+	function _get_mime_types() {
+		// Grab default mime-types
+		$mime_types = wp_get_mime_types();
+		$fu_mime_types = fu_get_mime_types();
+		// Workaround for IE
 		$mime_types['jpg|jpe|jpeg|pjpg'] = 'image/pjpeg';
 		$mime_types['png|xpng'] = 'image/x-png';
+		// Iterate through default extensions
+		foreach( $fu_mime_types as $extension => $details ) {
+			// Skip if it's not in the settings
+			if ( !in_array( $extension, $this->settings['enabled_files'] ) )
+				continue;
+
+			// Iterate through mime-types for this extension
+			foreach( $details['mimes'] as $ext_mime ) {
+				$mime_types[ $extension . '|' . $extension . sanitize_title_with_dashes( $ext_mime ) ] = $ext_mime;
+			}
+		}
+
+		// Configuration filter: fu_allowed_mime_types should return array of allowed mime types (see readme)
+		$mime_types = apply_filters( 'fu_allowed_mime_types', $mime_types );
 		return $mime_types;
 	}
 
@@ -183,38 +174,6 @@ class Frontend_Uploader {
 	}
 
 	/**
-	 * Check if the file could be uploaded
-	 *
-	 * @since 0.5
-	 *
-	 * @param  string  $ext  File Extension
-	 * @param  string  $type MIME-type
-	 *
-	 * @return boolean       is the file allowed or not
-	 */
-	function _is_allowed( $ext, $type ) {
-		$allowed_types = fu_get_mime_types();
-		$allowed_type_keys = array();
-		$is_ext_allowed = false;
-		foreach( $this->allowed_mime_types as $exts => $mime ) {
-			foreach(  (array) explode('|', $exts ) as $ext );
-				array_push( $allowed_type_keys, $ext );
-		}
-
-		$conditions = array(
-			(bool)  ( in_array( $ext, $allowed_type_keys ) ),
-			(bool)  in_array( $type, $this->allowed_mime_types ) || ( isset( $allowed_types[$ext] ) && in_array( $type, (array) $allowed_types[$ext] ) ),
-		);
-
-
-		foreach( $conditions as $condition )
-			if ( false === $condition )
-				return false;
-
-		return true;
-	}
-
-	/**
 	 * Handle uploading of the files
 	 *
 	 * @since  0.4
@@ -246,9 +205,9 @@ class Frontend_Uploader {
 			}
 
 			preg_match( '/.(?P<ext>[a-zA-Z0-9]+)$/', $k['name'], $ext_match );
-			// Add an error message
-			if ( !isset( $ext_match['ext'] ) || ! $this->_is_allowed( $ext_match['ext'], $k['type'] ) ) {
-				$errors['fu-disallowed-mime-type'][] = array( 'name' => $k['name'], 'mime' => $k['type'] );
+			// Add an error message if MIME-type is not allowed
+			if ( ! in_array( $k['type'], (array) $this->allowed_mime_types ) ) {
+					$errors['fu-disallowed-mime-type'][] = array( 'name' => $k['name'], 'mime' => $k['type'] );
 				continue;
 			}
 
