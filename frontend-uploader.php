@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber, Ricardo Zappala
-Version: 0.5.4
+Version: 0.5.5
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -44,6 +44,8 @@ class Frontend_Uploader {
 	public $settings;
 	public $settings_slug = 'frontend_uploader_settings';
 	public $is_debug = false;
+	public $form_fields = array();
+	public $request_form_fields = array();
 
 	/**
 	 * Here we go
@@ -52,36 +54,35 @@ class Frontend_Uploader {
 	 */
 	function __construct() {
 		// Hooking to wp_ajax
-		// @todo refactor in 0.6
-		add_action( 'wp_ajax_upload_ugphoto', array( $this, 'upload_content' ) );
-		add_action( 'wp_ajax_nopriv_upload_ugphoto', array( $this, 'upload_content' ) );
-		add_action( 'wp_ajax_approve_ugc', array( $this, 'approve_photo' ) );
 
-		add_action( 'wp_ajax_upload_ugc', array( $this, 'upload_content' ) );
-		add_action( 'wp_ajax_nopriv_upload_ugc', array( $this, 'upload_content' ) );
-		add_action( 'wp_ajax_approve_ugc_post', array( $this, 'approve_post' ) );
+		add_action( 'wp_ajax_approve_ugc', $this->_a(  'approve_photo' ) );
+		add_action( 'wp_ajax_approve_ugc_post', $this->_a(  'approve_post' ) );
+
+		add_action( 'wp_ajax_upload_ugc', $this->_a(  'upload_content' ) );
+		add_action( 'wp_ajax_nopriv_upload_ugc', $this->_a(  'upload_content' ) );
 
 		// Adding media submenu
-		add_action( 'admin_menu', array( $this, 'add_menu_items' ) );
+		add_action( 'admin_menu', $this->_a(  'add_menu_items' ) );
 
 		// Currently supported shortcodes
-		add_shortcode( 'fu-upload-form', array( $this, 'upload_form' ) );
-		add_shortcode( 'input', array( $this, 'shortcode_content_parser' ) );
-		add_shortcode( 'textarea', array( $this, 'shortcode_content_parser' ) );
-		add_shortcode( 'select', array( $this, 'shortcode_content_parser' ) );
+		add_shortcode( 'fu-upload-form', $this->_a(  'upload_form' ) );
+		add_shortcode( 'input', $this->_a(  'shortcode_content_parser' ) );
+		add_shortcode( 'textarea', $this->_a(  'shortcode_content_parser' ) );
+		add_shortcode( 'select', $this->_a(  'shortcode_content_parser' ) );
 
 		// Static assets
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+		add_action( 'wp_enqueue_scripts', $this->_a(  'enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts', $this->_a(  'admin_enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts', $this->_a(  'admin_enqueue_scripts' ) );
 
 		// Unautop the shortcode
 		add_filter( 'the_content', 'shortcode_unautop', 100 );
 		// Hiding not approved attachments from Media Gallery
 		// @since core 3.5-beta-1
-		add_filter( 'posts_where', array( $this, 'filter_posts_where' ) );
+		add_filter( 'posts_where', $this->_a(  'filter_posts_where' ) );
 
 		// Init
-		add_action( 'init', array( $this, 'action_init' ) );
+		add_action( 'init', $this->_a(  'action_init' ) );
 
 		// HTML helper to render HTML elements
 		$this->html = new Html_Helper;
@@ -90,7 +91,21 @@ class Frontend_Uploader {
 		// Either use default settings if no setting set, or try to merge defaults with existing settings
 		// Needed if new options were added in upgraded version of the plugin
 		$this->settings = array_merge( $this->settings_defaults(), (array) get_option( $this->settings_slug, $this->settings_defaults() ) );
-		register_activation_hook( __FILE__, array( $this, 'activate_plugin' ) );
+		register_activation_hook( __FILE__, $this->_a(  'activate_plugin' ) );
+
+		/**
+		 * Should consist of fields to be proccessed automatically on content submission
+		 *
+		 * @todo this is just a pass one
+		 *
+		 * Example field:
+		 *  array(
+		 *  'name' => '{form name}',
+		 *  'element' => HTML element,
+		 *  'context' => {title|description|file|meta} )
+		 * @var array
+		 */
+		$this->form_fields = array();
 	}
 
 	/**
@@ -99,7 +114,7 @@ class Frontend_Uploader {
 	function action_init() {
 		load_plugin_textdomain( 'frontend-uploader', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 		$this->allowed_mime_types = $this->_get_mime_types();
-		add_filter( 'upload_mimes', array( $this, '_get_mime_types' ), 999 );
+		add_filter( 'upload_mimes', $this->_a(  '_get_mime_types' ), 999 );
 	}
 
 	function _get_mime_types() {
@@ -110,13 +125,13 @@ class Frontend_Uploader {
 		$mime_types['jpg|jpe|jpeg|pjpg'] = 'image/pjpeg';
 		$mime_types['png|xpng'] = 'image/x-png';
 		// Iterate through default extensions
-		foreach( $fu_mime_types as $extension => $details ) {
+		foreach ( $fu_mime_types as $extension => $details ) {
 			// Skip if it's not in the settings
 			if ( !in_array( $extension, $this->settings['enabled_files'] ) )
 				continue;
 
 			// Iterate through mime-types for this extension
-			foreach( $details['mimes'] as $ext_mime ) {
+			foreach ( $details['mimes'] as $ext_mime ) {
 
 				$mime_types[ $extension . '|' . $extension . sanitize_title_with_dashes( $ext_mime ) ] = $ext_mime;
 			}
@@ -124,9 +139,9 @@ class Frontend_Uploader {
 		// Configuration filter: fu_allowed_mime_types should return array of allowed mime types (see readme)
 		$mime_types = apply_filters( 'fu_allowed_mime_types', $mime_types );
 
-		foreach( $mime_types as $ext_key => $mime ) {
+		foreach ( $mime_types as $ext_key => $mime ) {
 			// Check for php just in case
-			if ( false !== strpos( $mime, 'php') )
+			if ( false !== strpos( $mime, 'php' ) )
 				unset( $mime_types[$ext_key] );
 		}
 
@@ -175,6 +190,7 @@ class Frontend_Uploader {
 
 	/**
 	 * Determine if we should autoapprove the submission or not
+	 *
 	 * @return boolean [description]
 	 */
 	function _is_public() {
@@ -200,11 +216,13 @@ class Frontend_Uploader {
 		// File field name could be user defined, so we just get the first file
 		$files = current( $_FILES );
 
-		for ( $i = 0; $i < count( $_FILES['photo']['name'] ); $i++ ) {
+		for ( $i = 0; $i < count( $files['name'] ); $i++ ) {
 			$fields = array( 'name', 'type', 'tmp_name', 'error', 'size' );
 			foreach ( $fields as $field ) {
 				$k[$field] = $files[$field][$i];
 			}
+
+			$k['name'] = sanitize_file_name( $k['name'] );
 
 			// Skip to the next file if upload went wrong
 			if ( $k['tmp_name'] == "" ) {
@@ -214,7 +232,7 @@ class Frontend_Uploader {
 			preg_match( '/.(?P<ext>[a-zA-Z0-9]+)$/', $k['name'], $ext_match );
 			// Add an error message if MIME-type is not allowed
 			if ( ! in_array( $k['type'], (array) $this->allowed_mime_types ) ) {
-					$errors['fu-disallowed-mime-type'][] = array( 'name' => $k['name'], 'mime' => $k['type'] );
+				$errors['fu-disallowed-mime-type'][] = array( 'name' => $k['name'], 'mime' => $k['type'] );
 				continue;
 			}
 
@@ -260,9 +278,10 @@ class Frontend_Uploader {
 	function _upload_post() {
 		$errors = array();
 		$success = true;
+
 		$post_array = array(
 			'post_type' =>  isset( $_POST['post_type'] ) && in_array( $_POST['post_type'], get_post_types() ) ? $_POST['post_type'] : 'post',
-			'post_title'    => sanitize_text_field( $_POST['post_title'] ),
+			'post_title'    => isset( $_POST['caption'] ) ? sanitize_text_field( $_POST['caption'] )  : sanitize_text_field( $_POST['post_title'] ),
 			'post_content'  => wp_filter_post_kses( $_POST['post_content'] ),
 			'post_status'   => $this->_is_public() ? 'publish' : 'private',
 		);
@@ -296,14 +315,24 @@ class Frontend_Uploader {
 	 * @since  0.4
 	 */
 	function upload_content() {
+		$fields = array();
+		// @todo sanity check
+		$time = $_POST['request_time'];
+
+		$this->request_form_fields =  json_decode( urldecode( stripslashes( $_POST['form_fields'] ) ) );
+
 		// Bail if something fishy is going on
-		if ( !wp_verify_nonce( $_POST['nonceugphoto'], 'upload_ugphoto' ) ) {
+		if ( !wp_verify_nonce( $_POST['fu_nonce'], __FILE__ ) ) {
 			wp_safe_redirect( add_query_arg( array( 'response' => 'fu-error', 'errors' =>  'nonce-failure' ), wp_get_referer() ) );
 			exit;
 		}
+
+
+
 		$layout = isset( $_POST['form_layout'] ) && !empty( $_POST['form_layout'] ) ? $_POST['form_layout'] : 'image';
 		switch ( $layout ) {
 		case 'post':
+
 			$result = $this->_upload_post();
 			break;
 		case 'post_image':
@@ -316,11 +345,14 @@ class Frontend_Uploader {
 			break;
 		case 'image':
 		case 'media':
+
 			if ( isset( $_POST['post_ID'] ) && 0 !== $pid = (int) $_POST['post_ID'] ) {
 				$result = $this->_handle_files( $pid );
 			}
+
 			break;
 		}
+
 		$this->_notify_admin( $result );
 		$this->_handle_result( $result );
 		exit;
@@ -376,8 +408,8 @@ class Frontend_Uploader {
 				// Do not display mime-types in production
 				if ( !$this->is_debug && isset( $error[0]['mime'] ) )
 					unset( $error[0]['mime'] );
-
-				$_errors[$key] = join( ',,,', $error[0] );
+				if ( isset( $error[0] ) )
+					$_errors[$key] = join( ',,,', (array) $error[0] );
 			}
 
 			foreach ( $_errors as $key => $value ) {
@@ -385,7 +417,7 @@ class Frontend_Uploader {
 			}
 
 			$query_args['errors'] = join( ';', $errors_formatted );
-		}
+			}
 
 		wp_safe_redirect( add_query_arg( array( $query_args ) , $url ) );
 	}
@@ -407,6 +439,7 @@ class Frontend_Uploader {
 
 	/**
 	 * Display media list table
+	 *
 	 * @return [type] [description]
 	 */
 	function admin_list() {
@@ -415,6 +448,7 @@ class Frontend_Uploader {
 
 	/**
 	 * Display posts/custom post types table
+	 *
 	 * @return [type] [description]
 	 */
 	function admin_posts_list() {
@@ -425,14 +459,14 @@ class Frontend_Uploader {
 	 * Add submenu items
 	 */
 	function add_menu_items() {
-		add_media_page( __( 'Manage UGC', 'frontend-uploader' ), __( 'Manage UGC', 'frontend-uploader' ), 'edit_posts', 'manage_frontend_uploader', array( $this, 'admin_list' ) );
+		add_media_page( __( 'Manage UGC', 'frontend-uploader' ), __( 'Manage UGC', 'frontend-uploader' ), 'edit_posts', 'manage_frontend_uploader', $this->_a(  'admin_list' ) );
 		foreach ( (array) $this->settings['enabled_post_types'] as $cpt ) {
 			if ( $cpt == 'post' ) {
-				add_posts_page( __( 'Manage UGC Posts', 'frontend-uploader' ), __( 'Manage UGC', 'frontend-uploader' ), 'edit_posts', 'manage_frontend_posts_uploader', array( $this, 'admin_posts_list' ) );
+				add_posts_page( __( 'Manage UGC Posts', 'frontend-uploader' ), __( 'Manage UGC', 'frontend-uploader' ), 'edit_posts', 'manage_frontend_posts_uploader', $this->_a(  'admin_posts_list' ) );
 				continue;
 			}
 
-			add_submenu_page( "edit.php?post_type={$cpt}", __( 'Manage UGC Posts', 'frontend-uploader' ), __( 'Manage UGC', 'frontend-uploader' ), 'edit_posts', "manage_frontend_{$cpt}s_uploader", array( $this, 'admin_posts_list' ) );
+			add_submenu_page( "edit.php?post_type={$cpt}", __( 'Manage UGC Posts', 'frontend-uploader' ), __( 'Manage UGC', 'frontend-uploader' ), 'edit_posts', "manage_frontend_{$cpt}s_uploader", $this->_a(  'admin_posts_list' ) );
 		}
 	}
 
@@ -444,7 +478,7 @@ class Frontend_Uploader {
 	 */
 	function approve_photo() {
 		// Check permissions, attachment ID, and nonce
-		if ( !current_user_can( 'edit_posts' ) || intval( $_GET['id'] ) == 0 || !wp_verify_nonce( $_GET['nonceugphoto'], 'upload_ugphoto' ) )
+		if ( !current_user_can( 'edit_posts' ) || intval( $_GET['id'] ) == 0 || !wp_verify_nonce( $_GET['fu_nonce'], __FILE__ ) )
 			wp_safe_redirect( get_admin_url( null, 'upload.php?page=manage_frontend_uploader&error=id_or_perm' ) );
 
 		$post = get_post( $_GET['id'] );
@@ -508,24 +542,37 @@ class Frontend_Uploader {
 	 */
 	function shortcode_content_parser( $atts, $content = null, $tag ) {
 		$atts = shortcode_atts( array(
-					'id' => '',
-					'name' => '',
-					'description' => '',
-					'value' => '',
-					'type' => '',
-					'class' => '',
-					'multiple' => 'false',
-					'values' => '',
-					'wysiwyg_enabled' => false,
-				), $atts );
-		$callback = array( $this, "_render_{$tag}" );
+				'id' => '',
+				'name' => '',
+				'description' => '',
+				'value' => '',
+				'type' => '',
+				'class' => '',
+				'multiple' => false,
+				'values' => '',
+				'wysiwyg_enabled' => false,
+				'context' => 'meta'
+			), $atts );
+
+		extract( $atts );
+
+		$this->form_fields[] = array(
+			'name' => $name,
+			'context' => $context,
+			'tag' => $tag,
+			'type' => $type,
+			'value' => $value
+		);
+
+		$callback = $this->_a(  "_render_{$tag}" );
 		if ( is_callable( $callback ) )
 			return call_user_func( $callback, $atts );
 	}
 
 	/**
 	 * Input shortcode
-	 * @param  array shortcode attributes
+	 *
+	 * @param array   shortcode attributes
 	 * @return [type]       [description]
 	 */
 	function _render_input( $atts ) {
@@ -538,7 +585,7 @@ class Frontend_Uploader {
 		// Allow multiple file upload by default.
 		// To do so, we need to add array notation to name field: []
 		if ( !strpos( $name, '[]' ) && $type == 'file' )
-			$name = $name . '[]';
+			$name = 'files' . '[]';
 
 		$element = $this->html->element( 'label', $description . $this->html->input( $type, $name, $value, $atts ) , array( 'for' => $id ), false );
 
@@ -547,7 +594,8 @@ class Frontend_Uploader {
 
 	/**
 	 * Textarea shortcode
-	 * @param  array shortcode attributes
+	 *
+	 * @param array   shortcode attributes
 	 * @return [type]       [description]
 	 */
 	function _render_textarea( $atts ) {
@@ -567,17 +615,18 @@ class Frontend_Uploader {
 		}
 		// Render plain textarea
 		$element = $this->html->element( 'label', $description . $this->html->element( 'textarea', '', array(
-			'name' => $name,
-			'id' => $id,
-			'class' => $class
-		) ), array( 'for' => $id ), false );
+					'name' => $name,
+					'id' => $id,
+					'class' => $class
+				) ), array( 'for' => $id ), false );
 
 		return $this->html->element( 'div', $element, array( 'class' => 'ugc-input-wrapper' ), false );
 	}
 
 	/**
 	 * Checkboxes shortcode
-	 * @param  array shortcode attributes
+	 *
+	 * @param array   shortcode attributes
 	 * @return [type]       [description]
 	 */
 	function _render_checkboxes( $atts ) {
@@ -587,7 +636,8 @@ class Frontend_Uploader {
 
 	/**
 	 * Radio buttons shortcode
-	 * @param  array shortcode attributes
+	 *
+	 * @param array   shortcode attributes
 	 * @return [type]       [description]
 	 */
 	function _render_radio( $atts ) {
@@ -597,7 +647,8 @@ class Frontend_Uploader {
 
 	/**
 	 * Select shortcode
-	 * @param  array shortcode attributes
+	 *
+	 * @param array   shortcode attributes
 	 * @return [type]       [description]
 	 */
 	function _render_select( $atts ) {
@@ -606,15 +657,15 @@ class Frontend_Uploader {
 		$values = explode( ',', $values );
 		$options = '';
 		//Build options for the list
-		foreach( $values as $option ) {
+		foreach ( $values as $option ) {
 			$options .= $this->html->element( 'option', $option, array( 'value' => $option ), false );
 		}
 		//Render select field
 		$element = $this->html->element( 'label', $description . $this->html->element( 'select', $options, array(
-			'name' => $name,
-			'id' => $id,
-			'class' => $class
-		), false ), array( 'for' => $id ), false );
+					'name' => $name,
+					'id' => $id,
+					'class' => $class
+				), false ), array( 'for' => $id ), false );
 		return $this->html->element( 'div', $element, array( 'class' => 'ugc-input-wrapper' ), false );
 	}
 
@@ -643,15 +694,15 @@ class Frontend_Uploader {
 				), $atts ) );
 		$post_id = (int) $post_id;
 
-		switch( $form_layout ) {
-			case 'image':
-			case 'media':
-				$title = __( 'Submit a media file', 'frontend-uploader' );
+		switch ( $form_layout ) {
+		case 'image':
+		case 'media':
+			$title = __( 'Submit a media file', 'frontend-uploader' );
 			break;
-			case 'post':
-			case 'post_media':
+		case 'post':
+		case 'post_media':
 			break;
-			default:
+		default:
 		}
 
 		ob_start();
@@ -666,47 +717,54 @@ class Frontend_Uploader {
 		// Parse nested shortcodes
 		if ( $content ) {
 			echo do_shortcode( $content );
-		// Or render default form
+			// Or render default form
 		} else {
 			$textarea_desc = __( 'Description', 'frontend-uploader' );
 			$file_desc = __( 'Your Photo', 'frontend-uploader' );
 			$submit_button = __( 'Submit', 'frontend-uploader' );
 
-			echo do_shortcode ( '[input type="text" name="post_title" id="ug_post_title" description="' . __( 'Title', 'frontend-uploader' ) . '" class="required"]' );
+			echo do_shortcode ( '[input type="text" context="title" name="post_title" id="ug_post_title" description="' . __( 'Title', 'frontend-uploader' ) . '" class="required"]' );
 
 			// here we select the different fields based on the form layout to allow for different types
 			// of uploads (only a file, only a post or a file and post)
 
 			// @todo refactor
 			if ( $form_layout == "post_image" )
-				echo do_shortcode( '[textarea name="post_content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]
-								    [input type="file" name="photo" id="ug_photo" description="'. $file_desc .'" multiple=""]' );
+				echo do_shortcode( '[textarea name="post_content" context="content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]
+								    [input type="file" name="files" id="ug_photo" description="'. $file_desc .'" multiple=""]
+								    ' );
 			elseif ( $form_layout == "post" )
-				echo do_shortcode( '[textarea name="post_content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]' );
+				echo do_shortcode( '[textarea name="post_content" context="content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]' );
 			else
-				echo do_shortcode( '[textarea name="caption" class="textarea tinymce-enabled" id="ugcaption" description="'. $textarea_desc .'"]
-										[input type="file" name="photo" id="ug_photo" class="required" description="'. $file_desc .'" multiple=""]' );
+				echo do_shortcode( '[textarea name="caption" context="content" class="textarea tinymce-enabled" id="ugcaption" description="'. $textarea_desc .'"]
+										[input type="file" name="files" id="ug_photo" class="required" description="'. $file_desc .'" multiple=""]' );
 
 			if ( isset( $this->settings['show_author'] )  && $this->settings['show_author'] )
 				echo do_shortcode ( '[input type="text" name="post_author" id="ug_post_author" description="' . __( 'Author', 'frontend-uploader' ) . '" class=""]' );
 
 			echo do_shortcode ( '[input type="submit" class="btn" value="'. $submit_button .'"]' );
-			}
-?>
-		  <input type="hidden" name="action" value="upload_ugc" />
-		  <input type="hidden" value="<?php echo $post_id ?>" name="post_ID" />
-		  <input type="hidden" value="<?php echo $category; ?>" name="post_category" />
-		  <input type="hidden" value="<?php echo $success_page; ?>" name="success_page" />
-		  <input type="hidden" value="<?php echo $form_layout; ?>" name="form_layout" />
+		}
 
-		  <?php
-		if ( in_array( $form_layout, array( "post_image", "post" ) ) ): ?>
-		  <input type="hidden" value="<?php echo $post_type; ?>" name="post_type" />
-		<?php endif;
+		echo do_shortcode ( '[input type="hidden" name="action" value="upload_ugc" context="internal"]' );
+		echo do_shortcode ( '[input type="hidden" name="post_ID" value="' . $post_id . '" context="internal"]' );
+		echo do_shortcode ( '[input type="hidden" name="post_category" value="' . $category . '" context="internal"]' );
+		echo do_shortcode ( '[input type="hidden" name="success_page" value="' . $success_page . '" context="internal"]' );
+		echo do_shortcode ( '[input type="hidden" name="form_layout" value="' . $form_layout . '" context="internal"]' );
+		// @todo 0.6
+		?> <input type="hidden" name="form_fields" value="<?php echo esc_attr( json_encode( $this->form_fields ) ) ?>" /> <?php
+
+		if ( in_array( $form_layout, array( "post_image", "post" ) ) )
+			echo do_shortcode ( '[input type="hidden" name="post_type" value="' . $post_type . '" context="hidden"]' );
+
 		// Allow a little customization
 		do_action( 'fu_additional_html' );
+		$time = time();
+
+		// @todo this probably won't work
+		wp_cache_add( "fu_upload:{$time}", $this->form_fields, 'frontend-uploader', 600 );
 ?>
-		  <?php wp_nonce_field( 'upload_ugphoto', 'nonceugphoto' ); ?>
+<input type="hidden" name="request_time" value="<?php echo $time ?>" />
+		  <?php wp_nonce_field( __FILE__, 'fu_nonce' ); ?>
 		  <div class="clear"></div>
 	  </div>
 	  </form>
@@ -805,7 +863,7 @@ class Frontend_Uploader {
 				if ( isset( $map[ $error_type[0] ]['format'] ) )
 					$message = vsprintf( $map[ $error_type[0] ]['format'], $details );
 				else
-					$message = $map[ $error_type[0] ]['text'];
+					$message = $map[ $error_type[0] ]['text'];	
 			}
 			$output .= $this->_notice_html( $message, 'failure' );
 		}
@@ -822,11 +880,13 @@ class Frontend_Uploader {
 		wp_enqueue_script( 'frontend-uploader-js', FU_URL . 'lib/js/frontend-uploader.js', array( 'jquery', 'jquery-validate' ) );
 		// Include localization strings for default messages of validation plugin
 		// Filter is needed for wordpress.com
-		$wplang = apply_filters( 'fu_wplang', WPLANG );
+		$wplang = apply_filters( 'fu_wplang', defined( 'WPLANG' ) ? WPLANG : '' );
 		if ( $wplang ) {
 			$lang = explode( '_', $wplang );
-			$url = FU_URL . "lib/js/validate/localization/messages_{$lang[0]}.js";
-			wp_enqueue_script( 'jquery-validate-messages', $url, array( 'jquery' ) );
+			$relative_path = "lib/js/validate/localization/messages_{$lang[0]}.js";
+			$url = FU_URL . $relative_path;
+			if ( file_exists(  FU_ROOT . "/{$relative_path}" ) )
+				wp_enqueue_script( 'jquery-validate-messages', $url, array( 'jquery' ) );
 		}
 
 	}
@@ -876,7 +936,7 @@ class Frontend_Uploader {
 		$matches['ids'] = $if_prepend ? "ids=\"{$attachment_id},{$matches['ids']}\"" : "ids=\"{$matches['ids']},{$attachment_id}\"";
 		$deconstructed = array( 'way_before', 'before', 'ids', 'after' );
 		// Iterate through match elements and reconstruct the post
-		foreach( $deconstructed as $match_key ) {
+		foreach ( $deconstructed as $match_key ) {
 			if ( isset( $matches[$match_key] ) ) {
 				$content .= $matches[$match_key];
 			}
@@ -888,6 +948,10 @@ class Frontend_Uploader {
 			'post_content' => $content,
 		);
 		return wp_update_post( $post_to_update );
+	}
+
+	function _a( $method ) {
+		return array( $this, $method );
 	}
 
 }
