@@ -3,7 +3,7 @@ Contributors: rinatkhaziev, rfzappala, danielbachhuber
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file
 Requires at least: 3.3
 Tested up to: 3.6-beta3
-Stable tag: 0.5.4
+Stable tag: 0.5.5
 
 This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
 
@@ -168,6 +168,9 @@ function my_fu_allowed_mime_types( $mime_types ) {
 
 
 = 0.6 (Work in progress) =
+
+= 0.5.5 (June 5, 2013 ) =
+* Added German translation
 
 = 0.5.4 (May 19, 2013) =
 * Fixed bugs with form layouts
