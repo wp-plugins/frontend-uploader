@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber, Ricardo Zappala
-Version: 0.5.5
+Version: 0.5.6
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -118,8 +118,8 @@ class Frontend_Uploader {
 	}
 
 	function _get_mime_types() {
-		// Grab default mime-types
-		$mime_types = wp_get_mime_types();
+		// Use wp_get_mime_types if available, fallback to get_allowed_mime_types()
+		$mime_types = function_exists( 'wp_get_mime_types' ) ? wp_get_mime_types() : get_allowed_mime_types() ;
 		$fu_mime_types = fu_get_mime_types();
 		// Workaround for IE
 		$mime_types['jpg|jpe|jpeg|pjpg'] = 'image/pjpeg';
@@ -132,7 +132,6 @@ class Frontend_Uploader {
 
 			// Iterate through mime-types for this extension
 			foreach ( $details['mimes'] as $ext_mime ) {
-
 				$mime_types[ $extension . '|' . $extension . sanitize_title_with_dashes( $ext_mime ) ] = $ext_mime;
 			}
 		}
@@ -144,7 +143,6 @@ class Frontend_Uploader {
 			if ( false !== strpos( $mime, 'php' ) )
 				unset( $mime_types[$ext_key] );
 		}
-
 		return $mime_types;
 	}
 
@@ -163,6 +161,10 @@ class Frontend_Uploader {
 	}
 
 	function activate_plugin() {
+		global $wp_version;
+		if ( version_compare( $wp_version, '3.3', '<' ) ) {
+			wp_die( __( 'Frontend Uploader requires WordPress 3.3 or newer. Please upgrade.', 'frontend-uploader' ) );
+		}
 		$defaults = $this->settings_defaults();
 		$existing_settings = (array) get_option( $this->settings_slug, $this->settings_defaults() );
 		update_option( $this->settings_slug, array_merge( $defaults, (array) $existing_settings ) );
@@ -322,7 +324,7 @@ class Frontend_Uploader {
 		$this->request_form_fields =  json_decode( urldecode( stripslashes( $_POST['form_fields'] ) ) );
 
 		// Bail if something fishy is going on
-		if ( !wp_verify_nonce( $_POST['fu_nonce'], __FILE__ ) ) {
+		if ( !wp_verify_nonce( $_POST['fu_nonce'], FU_FILE_PATH ) ) {
 			wp_safe_redirect( add_query_arg( array( 'response' => 'fu-error', 'errors' =>  'nonce-failure' ), wp_get_referer() ) );
 			exit;
 		}
@@ -478,7 +480,7 @@ class Frontend_Uploader {
 	 */
 	function approve_photo() {
 		// Check permissions, attachment ID, and nonce
-		if ( !current_user_can( 'edit_posts' ) || intval( $_GET['id'] ) == 0 || !wp_verify_nonce( $_GET['fu_nonce'], __FILE__ ) )
+		if ( !current_user_can( 'edit_posts' ) || intval( $_GET['id'] ) == 0 || !wp_verify_nonce( $_GET['fu_nonce'], FU_FILE_PATH ) )
 			wp_safe_redirect( get_admin_url( null, 'upload.php?page=manage_frontend_uploader&error=id_or_perm' ) );
 
 		$post = get_post( $_GET['id'] );
@@ -739,7 +741,7 @@ class Frontend_Uploader {
 				echo do_shortcode( '[textarea name="caption" context="content" class="textarea tinymce-enabled" id="ugcaption" description="'. $textarea_desc .'"]
 										[input type="file" name="files" id="ug_photo" class="required" description="'. $file_desc .'" multiple=""]' );
 
-			if ( isset( $this->settings['show_author'] )  && $this->settings['show_author'] )
+			if ( isset( $this->settings['show_author'] )  && $this->settings['show_author'] == 'on' )
 				echo do_shortcode ( '[input type="text" name="post_author" id="ug_post_author" description="' . __( 'Author', 'frontend-uploader' ) . '" class=""]' );
 
 			echo do_shortcode ( '[input type="submit" class="btn" value="'. $submit_button .'"]' );
@@ -764,7 +766,7 @@ class Frontend_Uploader {
 		wp_cache_add( "fu_upload:{$time}", $this->form_fields, 'frontend-uploader', 600 );
 ?>
 <input type="hidden" name="request_time" value="<?php echo $time ?>" />
-		  <?php wp_nonce_field( __FILE__, 'fu_nonce' ); ?>
+		  <?php wp_nonce_field( FU_FILE_PATH, 'fu_nonce' ); ?>
 		  <div class="clear"></div>
 	  </div>
 	  </form>
