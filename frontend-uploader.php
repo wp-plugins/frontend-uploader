@@ -2,8 +2,8 @@
 /*
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
-Author: Rinat Khaziev, Daniel Bachhuber, Ricardo Zappala
-Version: 0.5.6
+Author: Rinat Khaziev, Daniel Bachhuber
+Version: 0.5.7
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -281,8 +281,9 @@ class Frontend_Uploader {
 		$errors = array();
 		$success = true;
 
+		// Construct post array;
 		$post_array = array(
-			'post_type' =>  isset( $_POST['post_type'] ) && in_array( $_POST['post_type'], get_post_types() ) ? $_POST['post_type'] : 'post',
+			'post_type' =>  isset( $_POST['post_type'] ) && in_array( $_POST['post_type'], $this->settings['enabled_post_types'] ) ? $_POST['post_type'] : 'post',
 			'post_title'    => isset( $_POST['caption'] ) ? sanitize_text_field( $_POST['caption'] )  : sanitize_text_field( $_POST['post_title'] ),
 			'post_content'  => wp_filter_post_kses( $_POST['post_content'] ),
 			'post_status'   => $this->_is_public() ? 'publish' : 'private',
@@ -295,6 +296,16 @@ class Frontend_Uploader {
 			$post_array = array_merge( $post_array, array( 'post_category' => array( (int) $_POST['post_category'] ) ) );
 		}
 
+		$author = isset( $_POST['post_author'] ) ? sanitize_text_field( $_POST['post_author'] ) : '';
+		$users = get_users( array(
+				'search' => $author,
+				'fields' => 'ID'
+			) );
+
+		if ( isset( $users[0] ) ) {
+			$post_array['post_author'] = (int) $users[0];
+		}
+
 		$post_id = wp_insert_post( $post_array, true );
 		// Something went wrong
 		if ( is_wp_error( $post_id ) ) {
@@ -302,8 +313,8 @@ class Frontend_Uploader {
 			$success = false;
 		} else {
 			do_action( 'fu_after_create_post', $post_id );
+			// If the author name is not in registered users
 			// Save the author name if it was filled and post was created successfully
-			$author = isset( $_POST['post_author'] ) ? sanitize_text_field( $_POST['post_author'] ) : '';
 			if ( $author )
 				add_post_meta( $post_id, 'author_name', $author );
 		}
@@ -342,7 +353,7 @@ class Frontend_Uploader {
 			$response = $this->_upload_post();
 			if ( ! is_wp_error( $response['post_id'] ) ) {
 				$result = $this->_handle_files( $response['post_id'] );
-				$result = array_merge( $response, $result );
+				$result = array_merge( $result, $response );
 			}
 			break;
 		case 'image':
@@ -389,14 +400,21 @@ class Frontend_Uploader {
 		$errors_formatted = array();
 		// Either redirect to success page if it's set and valid
 		// Or to referrer
-		$url = isset( $_POST['success_page'] ) && filter_var( $_POST['success_page'], FILTER_VALIDATE_URL ) ? $_POST['success_page'] :  strtok( wp_get_referer(), '?' );
+		$url = isset( $_POST['success_page'] ) && filter_var( $_POST['success_page'], FILTER_VALIDATE_URL ) ? $_POST['success_page'] : wp_get_referer();
 
 		// $query_args will hold everything that's needed for displaying notices to user
 		$query_args = array();
 
-		// Set the result to success
-		if ( ( isset( $result['success'] ) && $result['success'] ) || 0 < count( $result['media_ids'] ) )
-			$query_args['response'] = 'fu-sent';
+		// Account for successful uploads
+		if ( isset( $result['success'] ) && $result['success'] ) {
+			// If it's a post
+			if ( isset( $result['post_id'] ) )
+				$query_args['response'] = 'fu-post-sent';
+			// If it's media uploads
+			if ( isset( $result['media_ids'] ) && !isset( $result['post_id'] ) )
+				$query_args['response'] = 'fu-sent';
+		}
+
 
 		// Some errors happened
 		// Format a string to be passed as GET value
@@ -419,7 +437,7 @@ class Frontend_Uploader {
 			}
 
 			$query_args['errors'] = join( ';', $errors_formatted );
-			}
+		}
 
 		wp_safe_redirect( add_query_arg( array( $query_args ) , $url ) );
 	}
@@ -510,7 +528,7 @@ class Frontend_Uploader {
 
 		$post = get_post( $_GET['id'] );
 
-		$images = get_children( 'post_type=attachment&post_mime_type=image&post_parent=' . $post->ID );
+		$images = get_children( 'post_type=attachment&post_parent=' . $post->ID );
 
 		foreach ( $images as $imageID => $imagePost ) {
 			$current_image = array();
@@ -533,7 +551,6 @@ class Frontend_Uploader {
 		wp_safe_redirect( $url );
 		exit;
 	}
-
 
 	/**
 	 * Shortcode callback for inner content of [fu-upload-form] shortcode
@@ -716,36 +733,38 @@ class Frontend_Uploader {
 		if ( !empty( $_GET ) )
 			$this->_display_response_notices( $_GET );
 
-		// Parse nested shortcodes
-		if ( $content ) {
-			echo do_shortcode( $content );
-			// Or render default form
-		} else {
-			$textarea_desc = __( 'Description', 'frontend-uploader' );
-			$file_desc = __( 'Your Photo', 'frontend-uploader' );
-			$submit_button = __( 'Submit', 'frontend-uploader' );
+		$textarea_desc = __( 'Description', 'frontend-uploader' );
+		$file_desc = __( 'Your Media Files', 'frontend-uploader' );
+		$submit_button = __( 'Submit', 'frontend-uploader' );
+		// Display title field
+		echo do_shortcode ( '[input type="text" context="title" name="post_title" id="ug_post_title" description="' . __( 'Title', 'frontend-uploader' ) . '" class="required"]' );
 
-			echo do_shortcode ( '[input type="text" context="title" name="post_title" id="ug_post_title" description="' . __( 'Title', 'frontend-uploader' ) . '" class="required"]' );
-
-			// here we select the different fields based on the form layout to allow for different types
-			// of uploads (only a file, only a post or a file and post)
-
-			// @todo refactor
-			if ( $form_layout == "post_image" )
-				echo do_shortcode( '[textarea name="post_content" context="content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]
-								    [input type="file" name="files" id="ug_photo" description="'. $file_desc .'" multiple=""]
-								    ' );
-			elseif ( $form_layout == "post" )
-				echo do_shortcode( '[textarea name="post_content" context="content" class="textarea" id="ug_content" class="required" description="'. $textarea_desc .'"]' );
-			else
-				echo do_shortcode( '[textarea name="caption" context="content" class="textarea tinymce-enabled" id="ugcaption" description="'. $textarea_desc .'"]
-										[input type="file" name="files" id="ug_photo" class="required" description="'. $file_desc .'" multiple=""]' );
-
-			if ( isset( $this->settings['show_author'] )  && $this->settings['show_author'] == 'on' )
-				echo do_shortcode ( '[input type="text" name="post_author" id="ug_post_author" description="' . __( 'Author', 'frontend-uploader' ) . '" class=""]' );
-
-			echo do_shortcode ( '[input type="submit" class="btn" value="'. $submit_button .'"]' );
+		// Display default form fields
+		switch ( $form_layout ) {
+		case 'post_image':
+		case 'post_media':
+		case 'image':
+		case 'media':
+			echo do_shortcode( '[textarea name="post_content" context="content" class="textarea" id="ug_content" class="required" description="'. __( 'Post content or file description', 'frontend-uploader' ) .'"]
+							    [input type="file" name="files" id="ug_photo" description="'. $file_desc .'" multiple=""]
+							    ' );
+			break;
+		case 'post':
+			echo do_shortcode( '[textarea name="post_content" context="content" class="textarea" id="ug_content" class="required" description="'. __( 'Post content', 'frontend-uploader' ) .'"]' );
+			break;
+			break;
 		}
+
+		// Show author field
+		if ( isset( $this->settings['show_author'] )  && $this->settings['show_author'] == 'on' )
+			echo do_shortcode ( '[input type="text" name="post_author" id="ug_post_author" description="' . __( 'Author', 'frontend-uploader' ) . '" class=""]' );
+
+		// Parse nested shortcodes
+		if ( $content )
+			echo do_shortcode( $content );
+
+
+		echo do_shortcode ( '[input type="submit" class="btn" value="'. $submit_button .'"]' );
 
 		echo do_shortcode ( '[input type="hidden" name="action" value="upload_ugc" context="internal"]' );
 		echo do_shortcode ( '[input type="hidden" name="post_ID" value="' . $post_id . '" context="internal"]' );
@@ -807,6 +826,10 @@ class Frontend_Uploader {
 				'text' => __( 'Your file was successfully uploaded!', 'frontend-uploader' ),
 				'class' => 'success',
 			),
+			'fu-post-sent' => array(
+				'text' => __( 'Your post was successfully uploaded!', 'frontend-uploader' ),
+				'class' => 'success',
+			),
 			'fu-error' => array(
 				'text' => __( 'There was an error with your submission', 'frontend-uploader' ),
 				'class' => 'failure',
@@ -865,7 +888,7 @@ class Frontend_Uploader {
 				if ( isset( $map[ $error_type[0] ]['format'] ) )
 					$message = vsprintf( $map[ $error_type[0] ]['format'], $details );
 				else
-					$message = $map[ $error_type[0] ]['text'];	
+					$message = $map[ $error_type[0] ]['text'];
 			}
 			$output .= $this->_notice_html( $message, 'failure' );
 		}
