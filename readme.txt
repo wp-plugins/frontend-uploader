@@ -1,10 +1,10 @@
 === Frontend Uploader ===
-Contributors: rinatkhaziev, rfzappala, danielbachhuber
+Contributors: rinatkhaziev, danielbachhuber
 Donate link: http://digitallyconscious.com/my-wordpress-plugins/
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file
 Requires at least: 3.3
 Tested up to: 3.6-beta4
-Stable tag: 0.5.6
+Stable tag: 0.5.7
 
 This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
 
@@ -14,21 +14,9 @@ This plugin gives you an ability to easily accept, moderate and publish user gen
 
 This plugin supports multiple uploads for modern browsers. Multiple file uploads are enabled for default form. To use it in your custom shortcode add multiple="" attribute to file shortcode.
 
-Here's example of default form (you don't need to enter all that if you want to use default form, just use [fu-upload-form]):
+If you want to customize your form, please refer to FAQ section.
 
-`[fu-upload-form class="your-class" title="Upload your media"]
-[textarea name="caption" class="textarea" id="ug_caption" description="Description (optional)"]
-[input type="file" name="photo" id="ug_photo" class="required" description="Your Photo" multiple=""]
-[input type="submit" class="btn" value="Submit"]
-[/fu-upload-form]`
-
-If you want to customize your form, please refer to Form Customization section.
-
-You can also add select elements to your form like so:
-
-[select name="foo" class="select" id="ug_select" description="Pick a fruit" values="Apple,Banana,Cherry"]
-
-By default plugin allows all MIME-types that are whitelisted in WordPress. However, there's a filter if you need to add some exotic MIME-type. Refer to Other notes -> Configuration filters. Be sure to check out Other notes -> Form Customization to get a grasp on how to customize the upload form.
+By default plugin allows all MIME-types that are whitelisted in WordPress. However, there's a filter if you need to add some exotic MIME-type. Be sure to check out FAQ to get a grasp on how to customize the upload form with actions and filters.
 
 = New in v0.5 =
 
@@ -64,11 +52,11 @@ You can also manage UGC for selected custom post types (Please refer to the plug
 
 1. Screenshot of plugin's UI (It's looks like standard media list table, with slightly better Parent column and additional row action: "Approve")
 
-== Form Customization ==
+== Frequently Asked Questions ==
 
-= [fu-upload-form] parameters =
+= Shortcode parameters =
 
-The form has several parameters that can modify its behavior:
+The [fu-upload-form] shortcode has several parameters that can modify its behavior:
 
 1. 'title' => Headline that will be displayed before the form
 1. 'class' => HTML class of the form, defaults to 'validate'. If you want your form being validated - do not remove validate class
@@ -78,16 +66,23 @@ The form has several parameters that can modify its behavior:
 1. 'post_id' => ID of the post the image should be attached to. Defaults to current post id
 1. 'post_type' => Any registered whitelisted post type. Defaults to 'post'. Works only in post and post+image modes.
 
-== Frequently Asked Questions ==
+= Example of default media upload form =
+Here's example of default form (you don't need to enter all that if you want to use default form, just use [fu-upload-form]):
+
+`[fu-upload-form class="your-class" title="Upload your media"]
+[input type="text" name="post_title" id="title" class="required" description="Title" multiple=""]
+[textarea name="post_content" class="textarea" id="ug_caption" description="Description (optional)"]
+[input type="file" name="photo" id="ug_photo" class="required" description="Your Photo" multiple=""]
+[input type="submit" class="btn" value="Submit"]
+[/fu-upload-form]`
 
 = I want to customize my form =
 You can include additional elements with a set of shortcodes
-[input]
-[select]
-[textarea]
+[input type="text" name="post_title" id="title" class="required" description="Title" multiple=""]
+[select name="foo" class="select" id="ug_select" description="Pick a fruit" values="Apple,Banana,Cherry"]
+[textarea name="post_content" class="textarea" id="ug_caption" description="Description (optional)"]
 
 = I want to be allow users to upload mp3, psd, or any other file restricted by default. =
-
 You are able to do that within Frontend Uploader Settings admin page. The settings there cover the most popular extensions/MIME-types.
 The trick is that the same file might have several different mime-types based on setup of server/client.
 If you're experiencing any issues, you can set WP_DEBUG to true in your wp-config.php or put
@@ -166,6 +161,14 @@ function my_fu_additional_html() {
 
 
 = 0.6 (Work in progress) =
+
+= 0.5.7 (July 5th, 2013 =
+* Determine if post type of uploaded post is allowed in the plugin's settings rather than than in all registered post types
+* If uploadeded post has author set and it's one of the registered users of the blog, post_author is set to that user, otherwise saved as meta
+* Set success value to true if no files were uploaded but post was uplaoded succesfully
+* Add nested shortcodes after default fields, instead of replacing them
+
+
 
 = 0.5.6 (June 26, 2013) =
 * Prevent plugin activation if WP is older than 3.3
