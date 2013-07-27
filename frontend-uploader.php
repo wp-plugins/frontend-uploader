@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber
-Version: 0.5.8
+Version: 0.5.8.1
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -88,10 +88,6 @@ class Frontend_Uploader {
 		// HTML helper to render HTML elements
 		$this->html = new Html_Helper;
 
-		// Configuration filter to change manage permissions
-		$this->manage_permissions = apply_filters( 'fu_manage_permissions', 'edit_posts' );
-
-		$this->is_debug = (bool) apply_filters( 'fu_is_debug', defined( 'WP_DEBUG' ) && WP_DEBUG );
 		// Either use default settings if no setting set, or try to merge defaults with existing settings
 		// Needed if new options were added in upgraded version of the plugin
 		$this->settings = array_merge( $this->settings_defaults(), (array) get_option( $this->settings_slug, $this->settings_defaults() ) );
@@ -118,6 +114,11 @@ class Frontend_Uploader {
 	function action_init() {
 		load_plugin_textdomain( 'frontend-uploader', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 		$this->allowed_mime_types = $this->_get_mime_types();
+		// Configuration filter to change manage permissions
+		$this->manage_permissions = apply_filters( 'fu_manage_permissions', 'edit_posts' );
+		// Debug mode filter
+		$this->is_debug = (bool) apply_filters( 'fu_is_debug', defined( 'WP_DEBUG' ) && WP_DEBUG );
+
 		add_filter( 'upload_mimes', $this->_a(  '_get_mime_types' ), 999 );
 	}
 
