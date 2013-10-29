@@ -256,9 +256,10 @@ class Frontend_Uploader {
 			elseif ( isset( $_POST['post_content'] ) )
 				$caption = sanitize_text_field( $_POST['post_content'] );
 			// @todo remove or refactor
+			$filename = !empty( $this->settings['default_file_name'] ) ? $this->settings['default_file_name'] : pathinfo( $k['name'], PATHINFO_FILENAME );
 			$post_overrides = array(
 				'post_status' => $this->_is_public() ? 'publish' : 'private',
-				'post_title' => isset( $_POST['post_title'] ) && ! empty( $_POST['post_title'] ) ? sanitize_text_field( $_POST['post_title'] ) : 'Unnamed',
+				'post_title' => isset( $_POST['post_title'] ) && ! empty( $_POST['post_title'] ) ? sanitize_text_field( $_POST['post_title'] ) : $filename,
 				'post_content' => empty( $caption ) ? __( 'Unnamed', 'frontend-uploader' ) : $caption,
 				'post_excerpt' => empty( $caption ) ? __( 'Unnamed', 'frontend-uploader' ) :  $caption,
 			);
@@ -639,7 +640,13 @@ class Frontend_Uploader {
 		if ( !strpos( $name, '[]' ) && $type == 'file' )
 			$name = 'files' . '[]';
 
-		$element = $this->html->element( 'label', $description . $this->html->input( $type, $name, $value, $atts ) , array( 'for' => $id ), false );
+		$input = $this->html->input( $type, $name, $value, $atts );
+
+		// No need for wrappers or labels for hidden input
+		if ( $type == 'hidden' )
+			return $input;
+
+		$element = $this->html->element( 'label', $description . $input , array( 'for' => $id ), false );
 
 		return $this->html->element( 'div', $element, array( 'class' => 'ugc-input-wrapper' ), false );
 	}
@@ -666,13 +673,10 @@ class Frontend_Uploader {
 			return $this->html->element( 'div', $label . $tiny, array( 'class' => 'ugc-input-wrapper' ), false ) ;
 		}
 		// Render plain textarea
-		$element = $this->html->element( 'label', $description . $this->html->element( 'textarea', '', array(
-					'name' => $name,
-					'id' => $id,
-					'class' => $class
-				) ), array( 'for' => $id ), false );
+		$element = $this->html->element( 'textarea', '', array( 'name' => $name, 'id' => $id, 'class' => $class ) );
+		$label = $this->html->element( 'label', $description, array( 'for' => $id ), false );
 
-		return $this->html->element( 'div', $element, array( 'class' => 'ugc-input-wrapper' ), false );
+		return $this->html->element( 'div', $label . $element, array( 'class' => 'ugc-input-wrapper' ), false );
 	}
 
 	/**
@@ -899,8 +903,9 @@ class Frontend_Uploader {
 		// Mapping of form fields and their corresponding roles
 		// Should help to get rid of hardcoded logic of content upload
 		// Thus giving users more flexibility without requiring PHP knowledge
-		?> <input type="hidden" name="form_fields" value="<?php echo esc_attr( json_encode( $this->form_fields ) ) ?>" /> <?php
-
+		/*
+		 <input type="hidden" name="form_fields" value="<?php echo esc_attr( json_encode( $this->form_fields ) ) ?>" /> 
+		*/
 		// Set post type for the content submission
 		if ( in_array( $form_layout, array( "post_media", "post_image", "post" ) ) ) {
 			echo $this->shortcode_content_parser( array(
