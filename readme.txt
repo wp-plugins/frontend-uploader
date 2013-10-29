@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=rinat
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file, user generated content
 Requires at least: 3.3
 Tested up to: 3.8-alpha
-Stable tag: 0.5.9.2
+Stable tag: 0.6
 
 This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
 
@@ -182,7 +182,12 @@ If you're experiencing issues with upload it might be due to server misconfigura
 
 == Changelog ==
 
-= 0.6 (Work in progress) =
+= 0.6 (Oct 29, 2013) =
+* Updated German translation
+* Updated Spanish translation
+* Hidden inputs are no longer getting wrapped in label and div
+* Added an option to set a default file name 
+* Fixed category attribute of shortcode
 
 = 0.5.9 (Aug 28th, 2013) =
 * Introduced setting to disable default fields
