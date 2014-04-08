@@ -3,8 +3,8 @@ Contributors: rinatkhaziev, danielbachhuber, jtrees
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=rinat%2ekhaziev%40gmail%2ecom
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file, user generated content
 Requires at least: 3.3
-Tested up to: 3.8.1
-Stable tag: 0.7.1
+Tested up to: 3.9
+Stable tag: 0.7.2
 
 This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
 
@@ -230,6 +230,10 @@ function my_fu_upload_result( $layout, $result ) {
 }`
 
 == Changelog ==
+
+= 0.7.2 =
+* Updated Russian translation
+* Fixed an issue where categories of uploaded post/media weren't properly saved
 
 = 0.7.1 =
 * Fixed fatal error being produced when trying to upload with iOS device
