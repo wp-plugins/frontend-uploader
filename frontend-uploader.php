@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber
-Version: 0.7.2
+Version: 0.7.3
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 // Define consts and bootstrap and dependencies
-define( 'FU_VERSION', '0.7.2' );
+define( 'FU_VERSION', '0.7.3' );
 define( 'FU_ROOT' , dirname( __FILE__ ) );
 define( 'FU_FILE_PATH' , FU_ROOT . '/' . basename( __FILE__ ) );
 define( 'FU_URL' , plugins_url( '/', __FILE__ ) );
@@ -187,7 +187,7 @@ class Frontend_Uploader {
 			return $where;
 
 		$screen = get_current_screen();
-		if ( ! defined( 'DOING_AJAX' ) && $screen->base == 'upload' && ( !isset( $_GET['page'] ) || $_GET['page'] != 'manage_frontend_uploader' ) ) {
+		if ( ! defined( 'DOING_AJAX' ) && $screen && isset( $screen->base ) && $screen->base == 'upload' && ( !isset( $_GET['page'] ) || $_GET['page'] != 'manage_frontend_uploader' ) ) {
 			$where = str_replace( "post_status = 'private'", "post_status = 'inherit'", $where );
 		}
 		return $where;
@@ -582,6 +582,9 @@ class Frontend_Uploader {
 		if ( is_object( $post ) && $post->post_status == 'private' ) {
 			$post->post_status = 'inherit';
 			wp_update_post( $post );
+
+			do_action( 'fu_media_approved', $post );
+
 			$this->update_35_gallery_shortcode( $post->post_parent, $post->ID );
 			wp_safe_redirect( get_admin_url( null, 'upload.php?page=manage_frontend_uploader&approved=1' ) );
 		}
@@ -607,6 +610,8 @@ class Frontend_Uploader {
 		if ( !is_wp_error( $post ) ) {
 			$post->post_status = 'publish';
 			wp_update_post( $post );
+
+			do_action( 'fu_post_approved', $post );
 
 			// Check if there's any UGC attachments
 			$attachments = get_children( 'post_type=attachment&post_parent=' . $post->ID );
@@ -797,14 +802,19 @@ class Frontend_Uploader {
 		$options = '';
 		//Build options for the list
 		foreach ( $values as $option ) {
-			$options .= $this->html->element( 'option', $option, array( 'value' => $option ), false );
+			$kv = explode( ":", $option );
+			$caption = isset( $kv[1] ) ? $kv[1] : $kv[0];
+
+			$options .= $this->html->element( 'option', $caption, array( 'value' => $kv[0] ), false );
 		}
+
 		//Render select field
 		$element = $this->html->element( 'label', $description . $this->html->element( 'select', $options, array(
 					'name' => $name,
 					'id' => $id,
 					'class' => $class
 				), false ), array( 'for' => $id ), false );
+
 		return $this->html->element( 'div', $element, array( 'class' => 'ugc-input-wrapper' ), false );
 	}
 
