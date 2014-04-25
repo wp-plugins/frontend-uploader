@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=rinat
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file, user generated content, ugc, frontend upload
 Requires at least: 3.3
 Tested up to: 3.9
-Stable tag: 0.7.4
+Stable tag: 0.7.5
 License: GPLv2 or later
 
 This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
@@ -230,6 +230,9 @@ function my_fu_upload_result( $layout, $result ) {
 }`
 
 == Changelog ==
+
+= 0.7.5 (Apr 25, 2014) =
+* Bugfix: make sure that result of upload of post_media is success when uploading post but no files /props petsuka
 
 = 0.7.4 (Apr 24, 2014) =
 * Bugfix: fix inconsistencies of nonces in admin views. /props EamonMcCambridg
