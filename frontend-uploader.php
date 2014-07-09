@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber
-Version: 0.7.5
+Version: 0.7.6
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 // Define consts and bootstrap and dependencies
-define( 'FU_VERSION', '0.7.5' );
+define( 'FU_VERSION', '0.7.6' );
 define( 'FU_ROOT' , dirname( __FILE__ ) );
 define( 'FU_FILE_PATH' , FU_ROOT . '/' . basename( __FILE__ ) );
 define( 'FU_URL' , plugins_url( '/', __FILE__ ) );
@@ -99,6 +99,7 @@ class Frontend_Uploader {
 
 		// Currently supported shortcodes
 		add_shortcode( 'fu-upload-form', array( $this, 'upload_form' ) );
+		add_shortcode( 'fu-upload-response', array( $this, 'upload_response_shortcode') );
 
 		// Static assets
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
@@ -247,12 +248,12 @@ class Frontend_Uploader {
 
 			// Try to set post caption if the field is set on request
 			// Fallback to post_content if the field is not set
-			// @todo remove this in v0.6 when automatic handling of shortcode attributes is implemented
+			// TODO: remove this in v0.6 when automatic handling of shortcode attributes is implemented
 			if ( isset( $_POST['caption'] ) )
 				$caption = sanitize_text_field( $_POST['caption'] );
 			elseif ( isset( $_POST['post_content'] ) )
 				$caption = sanitize_text_field( $_POST['post_content'] );
-			// @todo remove or refactor
+			// TODO: remove or refactor
 			$filename = !empty( $this->settings['default_file_name'] ) ? $this->settings['default_file_name'] : pathinfo( $k['name'], PATHINFO_FILENAME );
 			$post_overrides = array(
 				'post_status' => $this->_is_public() ? 'publish' : 'private',
@@ -283,7 +284,7 @@ class Frontend_Uploader {
 		}
 		// Allow additional setup
 		// Pass array of attachment ids
-		do_action( 'fu_after_upload', $media_ids, $success );
+		do_action( 'fu_after_upload', $media_ids, $success, $post_id );
 		return array( 'success' => $success, 'media_ids' => $media_ids, 'errors' => $errors );
 	}
 
@@ -388,7 +389,7 @@ class Frontend_Uploader {
 		$hash = sanitize_text_field( $_POST['ff'] );
 		$this->form_fields = !empty( $this->form_fields ) ? $this->form_fields : $this->_get_fields_for_form( $form_post_id, $hash );
 
-		// @todo handle form fields error (false or empty)
+		// TODO: handle form fields error (false or empty)
 
 		$layout = isset( $_POST['form_layout'] ) && !empty( $_POST['form_layout'] ) ? $_POST['form_layout'] : 'image';
 		switch ( $layout ) {
@@ -440,7 +441,7 @@ class Frontend_Uploader {
 		// Notify site admins of new upload
 		if ( ! ( 'on' == $this->settings['notify_admin'] && $result['success'] ) )
 			return;
-		// @todo It'd be nice to add the list of upload files
+		// TODO: It'd be nice to add the list of upload files
 		$to = !empty( $this->settings['notification_email'] ) && filter_var( $this->settings['notification_email'], FILTER_VALIDATE_EMAIL ) ? $this->settings['notification_email'] : get_option( 'admin_email' );
 		$subj = __( 'New content was uploaded on your site', 'frontend-uploader' );
 		wp_mail( $to, $subj, $this->settings['admin_notification_text'] );
@@ -495,30 +496,9 @@ class Frontend_Uploader {
 			$query_args['errors'] = join( ';', $errors_formatted );
 		}
 
-		$redirect_url = '';
-
-		// Account for ugly permalinks
-		if ( ! get_option( 'permalink_structure' ) ) {
-			// This is a workaround to delete duplicate query params
-			// E.g. make sure that ?p=x&response=fu-error&response=fu-error is not possible
-			$query_args = array_merge( wp_parse_args( $url ), $query_args );
-
-			$redirect_url = build_query( $query_args );
-
-			/**
-			 * build_query produces '/=&' instead of proper /?= when
-			 * first element in array is '/'
-			 */
-			$redirect_url = str_replace( '/=&', '/?', $redirect_url );
-
-			// We need full url, not just query part
-			$redirect_url = home_url( $redirect_url );
-		} else {
-			// Use add_query_arg for nice permalinks
-			$redirect_url =  add_query_arg( array( $query_args ) , $url );
-		}
-
-		wp_safe_redirect( $redirect_url );
+		// Perform a safe redirect and exit
+		wp_safe_redirect( add_query_arg( $query_args, $url ) );
+		exit;
 	}
 
 	/**
@@ -570,7 +550,7 @@ class Frontend_Uploader {
 	/**
 	 * Approve a media file
 	 *
-	 * @todo refactor in 0.6
+	 * TODO: refactor in 0.6
 	 * @return [type] [description]
 	 */
 	function approve_media() {
@@ -598,7 +578,7 @@ class Frontend_Uploader {
 	/**
 	 *
 	 *
-	 * @todo refactor in 0.6
+	 * TODO: refactor in 0.6
 	 * @return [type] [description]
 	 */
 	function approve_post() {
@@ -823,7 +803,7 @@ class Frontend_Uploader {
 	/**
 	 * Display the upload post form
 	 *
-	 * @todo Major refactoring for this before releasing 0.6
+	 * TODO: Major refactoring for this before releasing 0.6
 	 *
 	 * @param array   $atts    shortcode attributes
 	 * @param string  $content content that is encloded in [fu-upload-form][/fu-upload-form]
@@ -916,7 +896,7 @@ class Frontend_Uploader {
 		}
 
 		// Show author field
-		// @todo remove
+		// TODO: remove
 		if ( isset( $this->settings['show_author'] ) && $this->settings['show_author'] == 'on' ) {
 			echo $this->shortcode_content_parser( array(
 					'type' => 'text',
@@ -1060,6 +1040,19 @@ class Frontend_Uploader {
 	}
 
 	/**
+	 * [fu-upload-response] shortcode callback to render upload results notice
+	 *
+	 * @param  [type] $atts [description]
+	 * @return [type]       [description]
+	 */
+	function upload_response_shortcode( $atts ) {
+		$this->enqueue_scripts();
+		ob_start();
+		$this->_display_response_notices( $_GET );
+		return ob_get_clean();
+	}
+
+	/**
 	 * Returns html chunk of single notice
 	 *
 	 * @since 0.4
@@ -1140,7 +1133,7 @@ class Frontend_Uploader {
 		);
 
 
-		// @todo DAMN SON you should refactor this
+		// TODO: DAMN SON you should refactor this
 		foreach ( $errors_arr as $error ) {
 			$error_type = explode( ':', $error );
 			$error_details = explode( '|', $error_type[1] );
