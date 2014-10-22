@@ -7,7 +7,6 @@
  */
 class Html_Helper {
 
-	// @todo additional setup on instantiation
 	function __construct() {
 
 	}
@@ -36,8 +35,10 @@ class Html_Helper {
 		}
 	}
 
-	function _checkbox( $name = '', $data = array(), $checked = array() ) {
-
+	function _checkbox( $name = '', $description = '', $value = '', $atts, $checked = array() ) {
+		// Generate unique id to make label clickable
+		$rnd_id = uniqid( 'uniq-label-id-' );
+		return '<div class="checkbox-option-wrapper"><input type="checkbox" id="' . esc_attr( $rnd_id ) . '" value="'. esc_attr( $value ) . '" name="' . esc_attr( $name ) . '" '.$this->_format_attributes( $atts ) . ' /><label for="' . esc_attr( $rnd_id ) . '">' .  esc_html ($description ) . '</label></div>';
 	}
 
 	function _radio( $name = '', $data = array(), $checked = array() ) {
@@ -128,19 +129,6 @@ class Html_Helper {
 
 	function form_end() {
 		echo '</form>';
-	}
-	/**
-	 * Cast to string and return with leading zero
-	 *
-	 * @param int     $number
-	 * @todo Why is this here?
-	 */
-	function leading_zero( $number ) {
-		$number = (string) $number;
-		if ( strlen( $number ) > 1 )
-			return $number;
-		else
-			return '0' . $number;
 	}
 
 	/**
