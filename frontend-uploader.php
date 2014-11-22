@@ -3,7 +3,7 @@
 Plugin Name: Frontend Uploader
 Description: Allow your visitors to upload content and moderate it.
 Author: Rinat Khaziev, Daniel Bachhuber
-Version: 0.9.1
+Version: 0.9.2
 Author URI: http://digitallyconscious.com
 
 GNU General Public License, Free Software Foundation <http://creativecommons.org/licenses/GPL/2.0/>
@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
 // Define consts and bootstrap and dependencies
-define( 'FU_VERSION', '0.9.1' );
+define( 'FU_VERSION', '0.9.2' );
 define( 'FU_ROOT' , dirname( __FILE__ ) );
 define( 'FU_FILE_PATH' , FU_ROOT . '/' . basename( __FILE__ ) );
 define( 'FU_URL' , plugins_url( '/', __FILE__ ) );
@@ -99,14 +99,8 @@ class Frontend_Uploader {
 		add_shortcode( 'fu-upload-form', array( $this, 'upload_form' ) );
 		add_shortcode( 'fu-upload-response', array( $this, 'upload_response_shortcode' ) );
 
-		/**
-		 * Since 4.01 shortcode contents is texturized by default,
-		 * avoid the behavior by explicitly whitelisting our shortcode
-		 */
-		add_filter( 'no_texturize_shortcodes', function( $shortcodes ) {
-			$shortcodes[] = 'fu-upload-form';
-			return $shortcodes;
-		});
+		// Since 4.01 we need to explicitly disable texturizing of shortcode's inner content
+		add_filter( 'no_texturize_shortcodes', array( $this, 'filter_no_texturize_shortcodes' ) );
 
 		// Static assets
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
@@ -191,6 +185,16 @@ class Frontend_Uploader {
 		$defaults = $this->settings_defaults();
 		$existing_settings = (array) get_option( $this->settings_slug, $this->settings_defaults() );
 		update_option( $this->settings_slug, array_merge( $defaults, (array) $existing_settings ) );
+	}
+
+
+	/**
+	 * Since 4.01 shortcode contents is texturized by default,
+	 * avoid the behavior by explicitly whitelisting our shortcode
+	 */
+	function filter_no_texturize_shortcodes( $shortcodes ) {
+		$shortcodes[] = 'fu-upload-form';
+		return $shortcodes;
 	}
 
 	/**

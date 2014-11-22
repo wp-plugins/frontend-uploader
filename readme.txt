@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=rinat
 Tags: frontend, image, images, media, uploader, upload, video, audio, photo, photos, picture, pictures, file, user generated content, ugc, frontend upload
 Requires at least: 3.3
 Tested up to: 4.1
-Stable tag: 0.9.1
+Stable tag: 0.9.2
 License: GPLv2 or later
 
 This plugin allows your visitors to upload User Generated Content (media and posts/custom-post-types with media).
@@ -238,6 +238,9 @@ function my_fu_upload_result( $layout, $result ) {
 }`
 
 == Changelog ==
+
+= 0.9.2 (Nov 22, 2014) =
+* PHP 5.2 compat for 0.9.1
 
 = 0.9.1 (Nov 21, 2014) =
 * Bugfix: don't texturize [fu-upload-form] shortcode's inner content (needed due to 4.01 default behavior changed)
