@@ -67,6 +67,13 @@ class Frontend_Uploader_Settings {
 		$settings_fields = array(
 			'frontend_uploader_settings' => array(
 				array(
+					'name' => 'enable_spam_protection',
+					'label' => __( 'Enable Akismet spam protection', 'frontend-uploader' ),
+					'desc' => __( 'Yes (Akismet must be enabled and configured)', 'frontend-uploader' ),
+					'type' => 'checkbox',
+					'default' => '',
+				),
+				array(
 					'name' => 'notify_admin',
 					'label' => __( 'Notify site admins', 'frontend-uploader' ),
 					'desc' => __( 'Yes', 'frontend-uploader' ),
@@ -88,13 +95,6 @@ class Frontend_Uploader_Settings {
 					'type' => 'text',
 					'default' => '',
 					'sanitize_callback' => 'sanitize_email',
-				),
-				array(
-					'name' => 'allowed_categories',
-					'label' => __( 'Allowed categories', 'frontend-uploader' ),
-					'desc' => __( 'Comma separated IDs (leave blank for all)', 'frontend-uploader' ),
-					'type' => 'text',
-					'default' => '',
 				),
 				array(
 					'name' => 'show_author',
@@ -120,7 +120,7 @@ class Frontend_Uploader_Settings {
 				),
 				array(
 					'name' => 'enabled_files',
-					'label' => __( 'Allow following files to be uploaded', 'frontend-uploader' ),
+					'label' => __( 'Also allow to upload these files (in addition to the ones that WP allows by default)', 'frontend-uploader' ),
 					'desc' => '',
                     'type' => 'multicheck',
                     'default' => array(),
@@ -139,6 +139,14 @@ class Frontend_Uploader_Settings {
 					'desc' => __( 'Yes', 'frontend-uploader' ),
 					'type' => 'checkbox',
 					'default' => '',
+				),
+				array(
+					'name' => 'default_file_name',
+					'label' => __( 'Default file name', 'frontend-uploader' ),
+					'desc' => __( 'Leave blank to use original file name', 'frontend-uploader' ),
+					'type' => 'text',
+					'default' => 'Unnamed',
+					/* No need to set a sanitize callback. It is handled automagically. */
 				),
 				array(
 					'name' => 'suppress_default_fields',
